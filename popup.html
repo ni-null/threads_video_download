@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Threads 影片下載器</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📹 Threads 影片下載器</h1>
+      <button id="refreshBtn" class="btn-icon" title="重新掃描">🔄</button>
+    </div>
+    
+    <div class="info-box">
+      <p id="statusText">掃描中...</p>
+      <p id="debugInfo" style="font-size: 11px; color: #999; margin-top: 4px;">Debug: 等待資料...</p>
+    </div>
+    
+    <div id="mediaList" class="media-list">
+      <!-- 媒體項目將被插入這裡 -->
+    </div>
+    
+    <div class="action-buttons">
+      <button id="downloadAllBtn" class="btn btn-primary" disabled>下載全部</button>
+      <button id="clearBtn" class="btn btn-secondary">清除列表</button>
+    </div>
+    
+    <div class="footer">
+      <p>檢測到 <span id="mediaCount">0</span> 個媒體檔案</p>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
