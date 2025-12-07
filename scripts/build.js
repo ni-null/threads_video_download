@@ -18,10 +18,10 @@ const staticFiles = [
   "popup.html",
   "popup.css",
   "privacy-policy.html",
-  "jszip.min.js", // 第三方庫，已經是壓縮版
+  "lib/jszip.min.js", // 第三方庫，已經是壓縮版
 ]
 
-const staticDirs = ["icons", "image", "_locales"]
+const staticDirs = ["icons", "image", "_locales", "lib"]
 
 console.log("🚀 開始構建發布版本...\n")
 
@@ -118,8 +118,13 @@ console.log("📋 步驟 3: 複製靜態檔案")
 for (const file of staticFiles) {
   const sourcePath = path.join(rootDir, file)
   const destPath = path.join(productDir, file)
+  const destDir = path.dirname(destPath)
 
   if (fs.existsSync(sourcePath)) {
+    // 確保目標目錄存在
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true })
+    }
     fs.copyFileSync(sourcePath, destPath)
     console.log(`   ✅ ${file}`)
   } else {
