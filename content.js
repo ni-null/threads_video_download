@@ -20,15 +20,15 @@
   // 設定狀態
   let settings = {
     enableMediaMenu: true,
-    enableHoverDownload: true,
+    enableSingleDownload: true,
     debugMode: false,
   }
 
   // 載入設定
   function loadSettings() {
-    chrome.storage.local.get(["enableMediaMenu", "enableHoverDownload", "debugMode"], (result) => {
+    chrome.storage.local.get(["enableMediaMenu", "enableSingleDownload", "debugMode"], (result) => {
       settings.enableMediaMenu = result.enableMediaMenu !== false
-      settings.enableHoverDownload = result.enableHoverDownload !== false
+      settings.enableSingleDownload = result.enableSingleDownload !== false
       settings.debugMode = result.debugMode === true
 
       // 初始化各模組的 debug 模式
@@ -60,7 +60,7 @@
     // 處理 hover 下載按鈕的顯示/隱藏
     const overlayButtons = document.querySelectorAll(".threads-overlay-btn")
     overlayButtons.forEach((btn) => {
-      btn.style.display = settings.enableHoverDownload ? "" : "none"
+      btn.style.display = settings.enableSingleDownload ? "" : "none"
     })
   }
 
@@ -111,7 +111,7 @@
     stats.lastProcessTime = new Date().toISOString()
 
     logDebug(`處理 DOM 變化 [${event.type}] - 總調用次數: ${stats.totalProcessCalls}`)
-    logDebug(`當前設定 - enableMediaMenu: ${settings.enableMediaMenu}, enableHoverDownload: ${settings.enableHoverDownload}`)
+    logDebug(`當前設定 - enableMediaMenu: ${settings.enableMediaMenu}, enableSingleDownload: ${settings.enableSingleDownload}`)
 
     // 檢查上下文是否失效
     if (window.ThreadsDownloaderButton && window.ThreadsDownloaderButton._contextInvalidated) {
@@ -130,11 +130,11 @@
     } else {
       logDebug("跳過 addDownloadButtons: enableMediaMenu = false")
     }
-    if (settings.enableHoverDownload) {
+    if (settings.enableSingleDownload) {
       logDebug("準備調用 addMediaOverlayButtons()")
       addMediaOverlayButtons()
     } else {
-      logDebug("跳過 addMediaOverlayButtons: enableHoverDownload = false")
+      logDebug("跳過 addMediaOverlayButtons: enableSingleDownload = false")
     }
 
     // 更新按鈕顯示狀態
