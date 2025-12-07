@@ -232,17 +232,19 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
 
   const btn = document.createElement("button")
   btn.className = "threads-overlay-btn"
-  btn.innerHTML = `<img src="${downloadIconUrl}" alt="下載" style="width: 20px; height: 20px;">`
+  btn.innerHTML = `<img src="${downloadIconUrl}" alt="下載" style="width: 16px; height: 16px;">`
   btn.title = mediaInfo.type === "video" ? i18n("downloadVideo") : i18n("downloadImage")
   btn.style.cssText = `
     position: absolute;
     left: 12px;
     bottom: 12px;
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: none;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: white;
     cursor: pointer;
     font-size: 18px;
@@ -284,12 +286,12 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
   // 按鈕的 hover 事件（保持顯示）
   btn.addEventListener("mouseenter", () => {
     isHovering = true
-    btn.style.background = "rgba(0, 0, 0, 0.9)"
+    btn.style.background = "rgba(0, 0, 0, 0.5)"
     btn.style.transform = "scale(1.1)"
   })
 
   btn.addEventListener("mouseleave", () => {
-    btn.style.background = "rgba(0, 0, 0, 0.7)"
+    btn.style.background = "rgba(0, 0, 0, 0.3)"
     btn.style.transform = "scale(1)"
     hideButton()
   })
