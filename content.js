@@ -176,6 +176,26 @@
     }
   })
 
+  // 監聽輪播切換事件（通過 transitionend 和 animationend）
+  // 這有助於檢測輪播式媒體的切換
+  document.addEventListener(
+    "transitionend",
+    () => {
+      logDebug("檢測到 transition 事件，檢查是否有新媒體")
+      DOMObserver.triggerProcess()
+    },
+    { passive: true }
+  )
+
+  document.addEventListener(
+    "animationend",
+    () => {
+      logDebug("檢測到 animation 事件，檢查是否有新媒體")
+      DOMObserver.triggerProcess()
+    },
+    { passive: true }
+  )
+
   // 監聽滾動事件（使用節流）
   // 這是備用機制，確保滾動時能處理新內容
   const throttledScrollHandler = window.ThreadsDownloaderUtils.throttle(() => {

@@ -29,6 +29,8 @@ window.ThreadsDownloaderOverlay.addMediaOverlayButtons = function () {
     return
   }
 
+  logDebug("開始添加媒體覆蓋按鈕")
+
   // 處理影片
   window.ThreadsDownloaderOverlay.processVideos()
 
@@ -40,27 +42,57 @@ window.ThreadsDownloaderOverlay.addMediaOverlayButtons = function () {
  * 處理所有影片元素
  */
 window.ThreadsDownloaderOverlay.processVideos = function () {
+  // 查詢所有 video 元素，包括隱藏的
   const videos = document.querySelectorAll("video")
+  logDebug("找到影片元素數量:", videos.length)
 
-  videos.forEach((video) => {
+  videos.forEach((video, index) => {
     // 跳過已處理的
     if (window.ThreadsDownloaderOverlay._processedMedia.has(video)) {
+      logDebug(`影片 ${index} 已處理，跳過`)
       return
     }
 
     const src = video.src || video.currentSrc || video.querySelector("source")?.src
     if (!src || src === "about:blank") {
+      logDebug(`影片 ${index} 沒有有效 src，跳過`)
       return
     }
 
     // 找到媒體容器（需要有 position: relative 的父元素）
-    const mediaContainer = window.ThreadsDownloaderOverlay.findMediaContainer(video)
+    // 對於輪播，先找到輪播容器本身
+    let mediaContainer = window.ThreadsDownloaderOverlay.findMediaContainer(video)
+
+    // 如果沒找到，嘗試找到輪播容器（可能是 role="region" 或其他指示符）
     if (!mediaContainer) {
+      let temp = video.parentElement
+      let depth = 0
+      while (temp && depth < 20) {
+        const style = window.getComputedStyle(temp)
+        // 尋找可能是輪播容器的祖先 - 檢查是否有 overflow hidden 和足夠大的尺寸
+        if (style.overflow === "hidden" && temp.offsetWidth > 200 && temp.offsetHeight > 200) {
+          mediaContainer = temp
+          if (style.position === "static") {
+            temp.style.position = "relative"
+          }
+          logDebug(`影片 ${index} 找到輪播容器於深度 ${depth}`)
+          break
+        }
+        temp = temp.parentElement
+        depth++
+      }
+    }
+
+    if (!mediaContainer) {
+      logDebug(`影片 ${index} 找不到媒體容器，跳過`)
       return
     }
 
-    // 檢查是否已經有覆蓋按鈕
-    if (mediaContainer.querySelector(".threads-overlay-btn")) {
+    // 檢查此影片是否已經有按鈕（而不是檢查容器中是否有任何按鈕）
+    // 多個媒體可能共享同一個容器
+    const existingButton = mediaContainer.querySelector(".threads-overlay-btn[data-video-src='" + src.replace(/'/g, "\\'") + "']")
+    if (existingButton) {
+      logDebug(`影片 ${index} 已有按鈕，標記為已處理`)
       window.ThreadsDownloaderOverlay._processedMedia.add(video)
       return
     }
@@ -91,7 +123,7 @@ window.ThreadsDownloaderOverlay.processVideos = function () {
     })
 
     window.ThreadsDownloaderOverlay._processedMedia.add(video)
-    logDebug("已為影片添加覆蓋按鈕")
+    logDebug(`影片 ${index} 成功添加按鈕`)
   })
 }
 
@@ -100,23 +132,30 @@ window.ThreadsDownloaderOverlay.processVideos = function () {
  */
 window.ThreadsDownloaderOverlay.processImages = function () {
   const pictures = document.querySelectorAll("picture")
+  logDebug("找到 picture 元素數量:", pictures.length)
 
-  pictures.forEach((picture) => {
+  pictures.forEach((picture, index) => {
     const img = picture.querySelector("img")
-    if (!img) return
+    if (!img) {
+      logDebug(`picture ${index} 沒有 img，跳過`)
+      return
+    }
 
     // 跳過已處理的
     if (window.ThreadsDownloaderOverlay._processedMedia.has(img)) {
+      logDebug(`picture ${index} 中的 img 已處理，跳過`)
       return
     }
 
     const imgUrl = img.src || img.getAttribute("data-src")
     if (!imgUrl || !(imgUrl.includes("cdninstagram") || imgUrl.includes("fbcdn"))) {
+      logDebug(`picture ${index} 中的 img URL 無效，跳過`)
       return
     }
 
     // 檢查圖片尺寸
     if (img.naturalWidth > 0 && (img.naturalWidth <= 100 || img.naturalHeight <= 100)) {
+      logDebug(`picture ${index} 中的 img 尺寸過小，跳過`)
       window.ThreadsDownloaderOverlay._processedMedia.add(img)
       return
     }
@@ -124,11 +163,15 @@ window.ThreadsDownloaderOverlay.processImages = function () {
     // 找到媒體容器
     const mediaContainer = window.ThreadsDownloaderOverlay.findMediaContainer(picture)
     if (!mediaContainer) {
+      logDebug(`picture ${index} 找不到媒體容器，跳過`)
       return
     }
 
-    // 檢查是否已經有覆蓋按鈕
-    if (mediaContainer.querySelector(".threads-overlay-btn")) {
+    // 檢查此圖片是否已經有按鈕（而不是檢查容器中是否有任何按鈕）
+    // 多個媒體可能共享同一個容器
+    const existingButton = mediaContainer.querySelector(".threads-overlay-btn[data-image-src='" + imgUrl.replace(/'/g, "\\'") + "']")
+    if (existingButton) {
+      logDebug(`picture ${index} 已有按鈕，標記為已處理`)
       window.ThreadsDownloaderOverlay._processedMedia.add(img)
       return
     }
@@ -142,13 +185,14 @@ window.ThreadsDownloaderOverlay.processImages = function () {
     })
 
     window.ThreadsDownloaderOverlay._processedMedia.add(img)
-    logDebug("已為圖片添加覆蓋按鈕")
+    logDebug(`picture ${index} 成功添加按鈕`)
   })
 }
 
 /**
  * 找到適合放置覆蓋按鈕的媒體容器
- * 對於 Threads，我們需要找到最外層有 --x-borderRadius 或 --x-aspectRatio 的容器
+ * 對於 Threads，我們需要找到最接近媒體元素的有 --x-borderRadius 或 --x-aspectRatio 的容器
+ * 這對於輪播式媒體很重要 - 每個媒體應該有自己的按鈕，而不是共享同一個
  * @param {HTMLElement} element
  * @returns {HTMLElement|null}
  */
@@ -157,27 +201,86 @@ window.ThreadsDownloaderOverlay.findMediaContainer = function (element) {
 
   let parent = element.parentElement
   let depth = 0
-  let bestContainer = null
+  let closestContainer = null
+  let foundGridContainer = false
 
+  // 先找最近的有 Threads CSS 變數的容器（針對單個媒體的容器）
+  while (parent && depth < 15) {
+    // 檢查是否有 Threads 特有的 CSS 變數（--x-borderRadius 或 --x-aspectRatio）
+    const styleStr = parent.style.cssText || ""
+    const hasBorderRadiusVar = styleStr.includes("--x-borderRadius")
+    const hasAspectRatioVar = styleStr.includes("--x-aspectRatio")
+
+    // 對於輪播 Grid 容器，會有 --x-gridTemplateColumns
+    if (styleStr.includes("--x-gridTemplateColumns")) {
+      foundGridContainer = true
+      logDebug(`找到 Grid 輪播容器於深度 ${depth}`)
+      // 對於 Grid 容器，不要直接使用它，而是使用其直接子元素作為媒體容器
+      // Grid 容器內的每個媒體應該有自己的子容器
+      break
+    }
+
+    // 如果有這些 CSS 變數，這是 Threads 的媒體容器 - 應該是我們要找的
+    if ((hasBorderRadiusVar || hasAspectRatioVar) && parent.offsetWidth > 100 && parent.offsetHeight > 50) {
+      logDebug(`找到媒體容器於深度 ${depth}，類名: ${parent.className.substring(0, 50)}`)
+      closestContainer = parent
+      // 找到了最近的 Threads 容器，停止向上查找
+      // 這確保對於輪播式媒體，每個媒體使用其最接近的容器
+      break
+    }
+
+    parent = parent.parentElement
+    depth++
+  }
+
+  // 如果找到了 Threads 風格的容器，使用它
+  if (closestContainer) {
+    const style = window.getComputedStyle(closestContainer)
+    if (style.position === "static") {
+      closestContainer.style.position = "relative"
+    }
+    return closestContainer
+  }
+
+  // 如果找到了 Grid 容器但還沒有找到媒體容器
+  // 往上再找一層，可能有實際的媒體包裝器
+  if (foundGridContainer && parent) {
+    // Grid 的直接父元素之一應該是實際的媒體容器
+    let temp = element.parentElement
+    while (temp && temp !== parent && depth < 10) {
+      const style = window.getComputedStyle(temp)
+      if (temp.offsetWidth > 100 && temp.offsetHeight > 50) {
+        if (style.position === "relative" || style.position === "absolute") {
+          closestContainer = temp
+          break
+        }
+      }
+      temp = temp.parentElement
+    }
+    if (closestContainer) {
+      const style = window.getComputedStyle(closestContainer)
+      if (style.position === "static") {
+        closestContainer.style.position = "relative"
+      }
+      return closestContainer
+    }
+  }
+
+  // 備用：尋找有 position 和合理尺寸的容器
+  parent = element.parentElement
+  depth = 0
   while (parent && depth < 15) {
     const style = window.getComputedStyle(parent)
 
-    // 檢查是否有 Threads 特有的 CSS 變數（--x-borderRadius 或 --x-aspectRatio）
-    const hasBorderRadiusVar = parent.style.cssText.includes("--x-borderRadius") || parent.getAttribute("style")?.includes("--x-borderRadius")
-    const hasAspectRatioVar = parent.style.cssText.includes("--x-aspectRatio") || parent.getAttribute("style")?.includes("--x-aspectRatio")
-
-    // 如果有這些 CSS 變數，這是 Threads 的媒體容器
-    if ((hasBorderRadiusVar || hasAspectRatioVar) && parent.offsetWidth > 100 && parent.offsetHeight > 50) {
-      bestContainer = parent
-      // 繼續向上找，可能有更外層的容器
-    }
-
-    // 也檢查有明確尺寸的容器
-    if (!bestContainer && parent.offsetWidth > 100 && parent.offsetHeight > 100) {
+    if (parent.offsetWidth > 100 && parent.offsetHeight > 100) {
       if (style.position === "relative" || style.position === "absolute") {
-        bestContainer = parent
+        closestContainer = parent
+        logDebug(`找到 position:relative 容器於深度 ${depth}`)
+        break
       } else if (style.borderRadius && style.borderRadius !== "0px") {
-        bestContainer = parent
+        closestContainer = parent
+        logDebug(`找到 borderRadius 容器於深度 ${depth}`)
+        break
       }
     }
 
@@ -185,13 +288,12 @@ window.ThreadsDownloaderOverlay.findMediaContainer = function (element) {
     depth++
   }
 
-  // 如果找到了容器，確保它有 position: relative
-  if (bestContainer) {
-    const style = window.getComputedStyle(bestContainer)
+  if (closestContainer) {
+    const style = window.getComputedStyle(closestContainer)
     if (style.position === "static") {
-      bestContainer.style.position = "relative"
+      closestContainer.style.position = "relative"
     }
-    return bestContainer
+    return closestContainer
   }
 
   // 備用：直接使用元素的父容器
@@ -200,9 +302,11 @@ window.ThreadsDownloaderOverlay.findMediaContainer = function (element) {
     if (parentStyle.position === "static") {
       element.parentElement.style.position = "relative"
     }
+    logDebug("使用備用：元素的直接父容器")
     return element.parentElement
   }
 
+  logDebug("找不到任何合適的媒體容器")
   return null
 }
 
@@ -234,6 +338,12 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
   btn.className = "threads-overlay-btn"
   btn.innerHTML = `<img src="${downloadIconUrl}" alt="下載" style="width: 16px; height: 16px;">`
   btn.title = mediaInfo.type === "video" ? i18n("downloadVideo") : i18n("downloadImage")
+  // 添加數據屬性以便識別
+  if (mediaInfo.type === "video") {
+    btn.setAttribute("data-video-src", mediaInfo.url)
+  } else {
+    btn.setAttribute("data-image-src", mediaInfo.url)
+  }
   btn.style.cssText = `
     position: absolute;
     left: 12px;
