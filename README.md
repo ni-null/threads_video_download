@@ -5,21 +5,25 @@
 ## 功能特性
 
 ✨ **自動媒體檢測**
+
 - 自動掃描頁面上的影片和圖片
 - 監聽所有網絡請求，捕捉媒體檔案
 - 支援 Fetch API 和 XMLHttpRequest 攔截
 
 📥 **下載功能**
+
 - 逐個下載媒體檔案
 - 批量下載所有媒體
 - 自訂下載位置到 `Threads/` 資料夾
 
 📋 **便捷操作**
+
 - 複製媒體連結到剪貼簿
 - 清除媒體列表
 - 實時顯示檢測到的媒體數量
 
 🎨 **用戶界面**
+
 - 美觀的彈出窗口設計
 - 彩色分類（圖片/影片）
 - 響應式設計
@@ -45,13 +49,16 @@
 ## 使用方法
 
 1. **訪問 Threads**
+
    - 進入 `https://www.threads.com/?hl=zh-tw`
 
 2. **自動掃描**
+
    - 外掛會自動開始掃描頁面上的媒體
    - 滾動頁面加載更多內容時，外掛會持續檢測
 
 3. **打開下載器**
+
    - 點擊 Chrome 工具欄上的外掛圖標
    - 會彈出下載器窗口
 
@@ -90,14 +97,17 @@ threads_video_download/
 ### 媒體檢測流程
 
 1. **Fetch/XHR 攔截**
+
    - 監聽所有 `fetch()` 和 `XMLHttpRequest` 請求
    - 檢查內容類型是否為視頻或圖片
 
 2. **DOM 掃描**
+
    - 掃描頁面中的 `<video>` 和 `<img>` 標籤
    - 檢查 `src` 和 `data-src` 屬性
 
 3. **動態監控**
+
    - 使用 `MutationObserver` 監聽 DOM 變化
    - 每 2 秒進行一次完整掃描
    - 檢查背景圖片和 Performance API 記錄
@@ -137,6 +147,7 @@ threads_video_download/
 ## 更新日誌
 
 ### v1.0 (2024)
+
 - ✅ 初始版本發佈
 - ✅ 實現基本的媒體檢測功能
 - ✅ 添加下載和複製功能
@@ -149,6 +160,18 @@ MIT License
 ## 貢獻
 
 歡迎提交 Issue 和 Pull Request！
+
+## 第三方庫授權
+
+本擴充功能使用了以下開源第三方庫：
+
+### JSZip
+
+- **版本**: 3.10.1
+- **授權**: MIT License
+- **用途**: ZIP 文件打包和下載功能
+- **來源**: https://github.com/Stuk/jszip
+- **授權全文**: https://github.com/Stuk/jszip/blob/main/LICENSE.markdown
 
 ## 免責聲明
 

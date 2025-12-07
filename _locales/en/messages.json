@@ -1,0 +1,254 @@
+{
+  "extName": {
+    "message": "Threads Downloader Pro - Media Saver",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Easily download videos and images from Threads.com. Supports batch download, ZIP packaging, and one-click save. Download buttons appear on media for quick saving.",
+    "description": "Extension description"
+  },
+  "downloadVideo": {
+    "message": "Download Video",
+    "description": "Tooltip for video download button"
+  },
+  "downloadImage": {
+    "message": "Download Image",
+    "description": "Tooltip for image download button"
+  },
+  "downloading": {
+    "message": "Downloading...",
+    "description": "Status when download is in progress"
+  },
+  "downloadStarted": {
+    "message": "Download started: $FILENAME$",
+    "description": "Notification when download starts",
+    "placeholders": {
+      "filename": {
+        "content": "$1",
+        "example": "video.mp4"
+      }
+    }
+  },
+  "downloadFailed": {
+    "message": "Download failed: $FILENAME$",
+    "description": "Notification when download fails",
+    "placeholders": {
+      "filename": {
+        "content": "$1",
+        "example": "video.mp4"
+      }
+    }
+  },
+  "noMedia": {
+    "message": "No media in this post",
+    "description": "Message when post has no media"
+  },
+  "tabAll": {
+    "message": "All ($COUNT$)",
+    "description": "Tab label for all media",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "tabVideos": {
+    "message": "Videos ($COUNT$)",
+    "description": "Tab label for videos",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "tabImages": {
+    "message": "Images ($COUNT$)",
+    "description": "Tab label for images",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
+  "downloadAll": {
+    "message": "Download All ($COUNT$ files)",
+    "description": "Button to download all media as ZIP",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "packaging": {
+    "message": "Packaging...",
+    "description": "Status when creating ZIP"
+  },
+  "completed": {
+    "message": "Completed! ($DONE$/$TOTAL$)",
+    "description": "Status when download completed",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "3"
+      },
+      "total": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "failed": {
+    "message": "Failed",
+    "description": "Status when download failed"
+  },
+  "noVideos": {
+    "message": "No videos",
+    "description": "Message when no videos found"
+  },
+  "noImages": {
+    "message": "No images",
+    "description": "Message when no images found"
+  },
+  "video": {
+    "message": "Video",
+    "description": "Video label"
+  },
+  "image": {
+    "message": "Image",
+    "description": "Image label"
+  },
+  "popupTitle": {
+    "message": "Threads Video Downloader",
+    "description": "Popup window title"
+  },
+  "popupScanning": {
+    "message": "Scanning...",
+    "description": "Popup scanning status"
+  },
+  "popupNoVideo": {
+    "message": "No video detected. Please play a video or scroll the page.",
+    "description": "Popup no video message"
+  },
+  "popupDetected": {
+    "message": "Detected $COUNT$ videos",
+    "description": "Popup detected videos message",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "popupDownloadAll": {
+    "message": "Download All",
+    "description": "Popup download all button"
+  },
+  "popupClear": {
+    "message": "Clear List",
+    "description": "Popup clear list button"
+  },
+  "popupMediaCount": {
+    "message": "Detected $COUNT$ media files",
+    "description": "Popup media count",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "popupRefresh": {
+    "message": "Rescan",
+    "description": "Popup refresh button tooltip"
+  },
+  "popupCopyLink": {
+    "message": "Copy Link",
+    "description": "Copy link button tooltip"
+  },
+  "popupEmptyHint": {
+    "message": "No video items yet. Tip: Play a video on Threads.",
+    "description": "Empty state hint"
+  },
+  "zipDownloaded": {
+    "message": "Downloaded $COUNT$ files: $FILENAME$",
+    "description": "ZIP download complete notification",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "5"
+      },
+      "filename": {
+        "content": "$2",
+        "example": "media.zip"
+      }
+    }
+  },
+  "zipFailed": {
+    "message": "ZIP download failed: $ERROR$",
+    "description": "ZIP download failed notification",
+    "placeholders": {
+      "error": {
+        "content": "$1",
+        "example": "Network error"
+      }
+    }
+  },
+  "downloadProgress": {
+    "message": "Downloading... $DONE$/$TOTAL$",
+    "description": "Download progress status",
+    "placeholders": {
+      "done": {
+        "content": "$1",
+        "example": "3"
+      },
+      "total": {
+        "content": "$2",
+        "example": "5"
+      }
+    }
+  },
+  "jsZipNotLoaded": {
+    "message": "JSZip not loaded, cannot package download",
+    "description": "Error when JSZip is not available"
+  },
+  "allFilesFailed": {
+    "message": "All files failed to download",
+    "description": "Error when all files fail"
+  },
+  "settingsTitle": {
+    "message": "Settings",
+    "description": "Settings section title"
+  },
+  "enableMediaMenu": {
+    "message": "Media Download Menu",
+    "description": "Toggle for media download menu"
+  },
+  "enableSingleDownload": {
+    "message": "Single Media Download",
+    "description": "Toggle for single media download"
+  },
+  "enableDebugMode": {
+    "message": "Developer Mode (Debug)",
+    "description": "Toggle for debug mode"
+  },
+  "developer": {
+    "message": "Developer",
+    "description": "Developer label"
+  },
+  "language": {
+    "message": "Language",
+    "description": "Language label"
+  },
+  "languageAuto": {
+    "message": "Auto (Browser Language)",
+    "description": "Auto language option"
+  },
+  "reportIssue": {
+    "message": "Report Issue",
+    "description": "Report issue link"
+  }
+}
