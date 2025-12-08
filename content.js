@@ -22,14 +22,19 @@
     enableMediaMenu: true,
     enableSingleDownload: true,
     debugMode: false,
+    language: "auto",
   }
 
   // 載入設定
-  function loadSettings() {
-    chrome.storage.local.get(["enableMediaMenu", "enableSingleDownload", "debugMode"], (result) => {
+  async function loadSettings() {
+    // 先初始化語言
+    await window.ThreadsDownloaderUtils.initLanguage()
+    
+    chrome.storage.local.get(["enableMediaMenu", "enableSingleDownload", "debugMode", "language"], (result) => {
       settings.enableMediaMenu = result.enableMediaMenu !== false
       settings.enableSingleDownload = result.enableSingleDownload !== false
       settings.debugMode = result.debugMode === true
+      settings.language = result.language || "auto"
 
       // 初始化各模組的 debug 模式
       if (window.ThreadsDownloaderUtils) {
@@ -69,6 +74,13 @@
     if (message.action === "updateSettings") {
       settings = message.settings
       logDebug("設定已更新:", settings)
+
+      // 如果語言變更，重新載入語言檔案
+      if (message.settings.language !== undefined) {
+        window.ThreadsDownloaderUtils.initLanguage().then(() => {
+          logDebug("語言已更新")
+        })
+      }
 
       // 更新 utils 的 debug 模式
       if (window.ThreadsDownloaderUtils) {

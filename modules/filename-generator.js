@@ -46,7 +46,7 @@ window.ThreadsFilenameGenerator.generateFilename = function (options) {
 
   // 如果有完整的貼文資訊，使用標準格式
   if (postInfo && postInfo.username && postInfo.postId) {
-    return `11@${postInfo.username}-${postInfo.postId}-${index}${ext}`
+    return `@${postInfo.username}-${postInfo.postId}-${index}${ext}`
   }
 
   // 如果沒有貼文資訊，根據設定決定是否使用時間戳

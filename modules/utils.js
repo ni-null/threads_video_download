@@ -5,6 +5,10 @@ window.ThreadsDownloaderUtils = window.ThreadsDownloaderUtils || {}
 // Debug 模式設定 (可通過擴充功能設定控制)
 window.ThreadsDownloaderUtils._debugMode = false
 
+// 語言設定
+window.ThreadsDownloaderUtils._currentLanguage = null
+window.ThreadsDownloaderUtils._messages = null
+
 // 調試日誌函數 - 只在 debug 模式下輸出
 window.ThreadsDownloaderUtils.logDebug = function (message, data = null) {
   if (window.ThreadsDownloaderUtils._debugMode) {
@@ -12,10 +16,57 @@ window.ThreadsDownloaderUtils.logDebug = function (message, data = null) {
   }
 }
 
-// 初始化 debug 模式 (從 storage 讀取)
-chrome.storage.local.get(["debugMode"], (result) => {
-  window.ThreadsDownloaderUtils._debugMode = result.debugMode === true
-})
+// 語言映射：chrome.i18n.getUILanguage() -> manifest locale
+const localeMap = {
+  "zh-TW": "zh_TW",
+  "zh-CN": "zh_CN",
+  "zh-HK": "zh_TW",
+  "zh-SG": "zh_CN",
+  ja: "ja",
+  "ja-JP": "ja",
+  ko: "ko",
+  "ko-KR": "ko",
+  en: "en",
+  "en-US": "en",
+  "en-GB": "en",
+}
+
+/**
+ * 初始化語言設定
+ */
+window.ThreadsDownloaderUtils.initLanguage = async function () {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["language", "debugMode"], async (result) => {
+      window.ThreadsDownloaderUtils._debugMode = result.debugMode === true
+      
+      const savedLanguage = result.language || "auto"
+      let targetLocale = null
+
+      if (savedLanguage === "auto") {
+        // 使用瀏覽器語言
+        const browserLang = chrome.i18n.getUILanguage()
+        targetLocale = localeMap[browserLang] || "en"
+      } else {
+        targetLocale = savedLanguage
+      }
+
+      window.ThreadsDownloaderUtils._currentLanguage = targetLocale
+      window.ThreadsDownloaderUtils.logDebug("載入語言:", targetLocale)
+
+      // 載入語言檔案
+      try {
+        const response = await fetch(chrome.runtime.getURL(`_locales/${targetLocale}/messages.json`))
+        window.ThreadsDownloaderUtils._messages = await response.json()
+        window.ThreadsDownloaderUtils.logDebug("語言檔案載入成功")
+      } catch (error) {
+        console.error("無法載入語言檔案:", error)
+        window.ThreadsDownloaderUtils._messages = null
+      }
+
+      resolve()
+    })
+  })
+}
 
 /**
  * i18n 國際化函數
@@ -26,12 +77,43 @@ chrome.storage.local.get(["debugMode"], (result) => {
  */
 window.ThreadsDownloaderUtils.i18n = function (messageName, substitutions = null) {
   try {
+    // 如果已載入自訂語言檔案，從中讀取
+    if (window.ThreadsDownloaderUtils._messages && window.ThreadsDownloaderUtils._messages[messageName]) {
+      const messageData = window.ThreadsDownloaderUtils._messages[messageName]
+      let message = messageData.message
+      
+      // 處理佔位符替換
+      if (substitutions && messageData.placeholders) {
+        const subs = Array.isArray(substitutions) ? substitutions : [substitutions]
+        
+        // 遍歷所有佔位符定義
+        Object.keys(messageData.placeholders).forEach((placeholderName) => {
+          const placeholder = messageData.placeholders[placeholderName]
+          const placeholderPattern = placeholder.content // 例如 "$1"
+          
+          // 提取位置索引（$1 -> 1, $2 -> 2）
+          const match = placeholderPattern.match(/\$(\d+)/)
+          if (match) {
+            const index = parseInt(match[1]) - 1 // 轉換為 0-based 索引
+            if (index >= 0 && index < subs.length) {
+              // 替換命名佔位符（例如 $COUNT$ -> 實際值）
+              const namedPlaceholder = `\\$${placeholderName.toUpperCase()}\\$`
+              message = message.replace(new RegExp(namedPlaceholder, 'gi'), subs[index])
+            }
+          }
+        })
+      }
+      
+      return message
+    }
+    
+    // Fallback 到 chrome.i18n
     if (chrome && chrome.i18n && chrome.i18n.getMessage) {
       const message = chrome.i18n.getMessage(messageName, substitutions)
       return message || messageName
     }
   } catch (e) {
-    // 如果無法使用 chrome.i18n（例如在某些情況下），返回訊息名稱
+    console.error("i18n error:", e)
   }
   return messageName
 }

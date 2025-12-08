@@ -30,7 +30,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["image/*"],
+      "resources": ["image/*", "_locales/*/messages.json"],
       "matches": ["https://www.threads.com/*"]
     }
   ],

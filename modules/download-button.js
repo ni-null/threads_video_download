@@ -11,6 +11,16 @@ window.ThreadsDownloaderButton._contextInvalidated = false
 window.ThreadsDownloaderButton._debugMode = false
 
 /**
+ * i18n 輔助函數
+ * @param {string} messageName - 訊息名稱
+ * @param {string|string[]} substitutions - 替換參數
+ * @returns {string} - 本地化後的字串
+ */
+function i18n(messageName, substitutions = null) {
+  return window.ThreadsDownloaderUtils?.i18n(messageName, substitutions) || messageName
+}
+
+/**
  * Debug 日誌函數
  * @param {...any} args - 日誌參數
  */
@@ -346,8 +356,8 @@ window.ThreadsDownloaderButton.createDownloadButton = function (btnContainer, po
 
   const btn = document.createElement("button")
   btn.className = "threads-download-btn"
-  btn.innerHTML = `<img src="${iconUrl}" alt="下載" style="width: 18px; height: 18px; vertical-align: middle;">`
-  btn.title = "下載影片"
+  btn.innerHTML = `<img src="${iconUrl}" alt="${i18n('downloadVideo')}" style="width: 18px; height: 18px; vertical-align: middle;">`
+  btn.title = i18n("downloadVideo")
   btn.style.cssText = `
     padding: 6px 10px;
     border-radius: 20px;
@@ -563,6 +573,18 @@ window.ThreadsDownloaderButton.extractVideosFromPost = function (postContainer) 
 // 更新下載選單（支援 tab 切換）
 window.ThreadsDownloaderButton.updateDownloadMenu = function (menu, media) {
   const { i18n } = window.ThreadsDownloaderUtils
+  
+  // Debug: 輸出當前語言設定
+  logDebug("=== 下載選單語言除錯資訊 ===")
+  logDebug("當前語言:", window.ThreadsDownloaderUtils._currentLanguage)
+  logDebug("語言檔案已載入:", window.ThreadsDownloaderUtils._messages ? "是" : "否")
+  if (window.ThreadsDownloaderUtils._messages) {
+    logDebug("測試 i18n('tabAll'):", i18n("tabAll", "5"))
+    logDebug("測試 i18n('downloadAll'):", i18n("downloadAll", "5"))
+    logDebug("測試 i18n('noMedia'):", i18n("noMedia"))
+  }
+  logDebug("=============================")
+  
   menu.innerHTML = ""
 
   const totalCount = media.videos.length + media.images.length
@@ -1109,8 +1131,8 @@ window.ThreadsDownloaderButton.downloadVideoFromPage = function (url, filename) 
 window.ThreadsDownloaderButton.captureVideoFrame = function (videoElement, videoUrl) {
   return new Promise((resolve) => {
     try {
-      // 方法1: 如果影片已經載入，直接從現有元素擷取
-      if (videoElement && videoElement.readyState >= 2) {
+      // 方法1: 如果影片已經載入且有 crossOrigin，直接從現有元素擷取
+      if (videoElement && videoElement.readyState >= 2 && videoElement.crossOrigin === "anonymous") {
         const canvas = document.createElement("canvas")
         canvas.width = videoElement.videoWidth || 160
         canvas.height = videoElement.videoHeight || 90
@@ -1124,12 +1146,12 @@ window.ThreadsDownloaderButton.captureVideoFrame = function (videoElement, video
             return
           }
         } catch (e) {
-          // 可能因為跨域問題無法擷取
-          console.log("擷取現有影片失敗:", e)
+          // 擷取失敗，繼續嘗試方法2
+          logDebug("擷取現有影片失敗 (CORS):", e.message)
         }
       }
 
-      // 方法2: 創建新的影片元素來擷取
+      // 方法2: 創建新的影片元素來擷取（設定 crossOrigin 避免 CORS 問題）
       if (videoUrl) {
         const tempVideo = document.createElement("video")
         tempVideo.crossOrigin = "anonymous"
@@ -1163,7 +1185,8 @@ window.ThreadsDownloaderButton.captureVideoFrame = function (videoElement, video
               resolve(null)
             }
           } catch (e) {
-            console.log("擷取影片幀失敗:", e)
+            // CORS 或其他錯誤，無法擷取縮圖
+            logDebug("擷取影片幀失敗 (可能是 CORS 限制):", e.message)
             tempVideo.src = ""
             resolve(null)
           }
@@ -1181,7 +1204,7 @@ window.ThreadsDownloaderButton.captureVideoFrame = function (videoElement, video
         resolve(null)
       }
     } catch (e) {
-      console.log("captureVideoFrame 錯誤:", e)
+      logDebug("captureVideoFrame 錯誤:", e.message)
       resolve(null)
     }
   })
