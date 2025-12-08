@@ -32,55 +32,10 @@ window.ThreadsDownloaderOverlay.addMediaOverlayButtons = function () {
   window.ThreadsDownloaderOverlay.processImages()
 }
 
-/**
- * 檢測媒體元素是否有效
- * @param {HTMLElement} element - 媒體元素
- * @param {string} src - 媒體源
- * @returns {Object|null} 有效時返回 {isValid: true, src}, 否則返回 null
- */
-window.ThreadsDownloaderOverlay.detectMedia = function (element, src) {
-  if (!src || src === "about:blank") {
-    return null
-  }
-  return { isValid: true, src }
-}
-
-/**
- * 檢測圖片元素是否有效
- * @param {HTMLImageElement} img - 圖片元素
- * @param {string} url - 圖片URL
- * @returns {Object|null} 有效時返回 {isValid: true, url}, 否則返回 null
- */
-window.ThreadsDownloaderOverlay.detectImage = function (img, url) {
-  if (!url || !(url.includes("cdninstagram") || url.includes("fbcdn"))) {
-    return null
-  }
-  if (img.naturalWidth > 0 && (img.naturalWidth <= 100 || img.naturalHeight <= 100)) {
-    return null
-  }
-  return { isValid: true, url }
-}
-
-/**
- * 從視頻元素獲取縮圖
- */
-window.ThreadsDownloaderOverlay.getPosterFromVideo = function (video) {
-  let poster = video.poster || ""
-  if (!poster) {
-    let searchContainer = video.parentElement
-    let depth = 0
-    while (searchContainer && depth < 8 && !poster) {
-      const img = searchContainer.querySelector('img[src*="cdninstagram"], img[src*="fbcdn"]')
-      if (img && img.src && img !== video) {
-        poster = img.src
-        break
-      }
-      searchContainer = searchContainer.parentElement
-      depth++
-    }
-  }
-  return poster
-}
+// 以下函數已移至 media-extractor.js 統一管理：
+// - detectMedia -> ThreadsMediaExtractor.extractVideo
+// - detectImage -> ThreadsMediaExtractor.extractImage
+// - getPosterFromVideo -> ThreadsMediaExtractor.extractPoster
 
 /**
  * 檢查是否已有按鈕
@@ -101,9 +56,9 @@ window.ThreadsDownloaderOverlay.processVideos = function () {
       return
     }
 
-    const src = video.src || video.currentSrc || video.querySelector("source")?.src
-    const mediaInfo = window.ThreadsDownloaderOverlay.detectMedia(video, src)
-    if (!mediaInfo) {
+    // 使用統一提取模組
+    const mediaData = window.ThreadsMediaExtractor.extractVideo(video, { maxDepth: 8 })
+    if (!mediaData) {
       logDebug(`影片 ${index} 無效，跳過`)
       return
     }
@@ -114,18 +69,12 @@ window.ThreadsDownloaderOverlay.processVideos = function () {
       return
     }
 
-    if (window.ThreadsDownloaderOverlay.hasExistingButton(mediaContainer, "data-video-src", src)) {
+    if (window.ThreadsDownloaderOverlay.hasExistingButton(mediaContainer, "data-video-src", mediaData.url)) {
       window.ThreadsDownloaderOverlay._processedMedia.add(video)
       return
     }
 
-    const poster = window.ThreadsDownloaderOverlay.getPosterFromVideo(video)
-    window.ThreadsDownloaderOverlay.createOverlayButton(mediaContainer, {
-      type: "video",
-      url: src,
-      poster: poster,
-      element: video,
-    })
+    window.ThreadsDownloaderOverlay.createOverlayButton(mediaContainer, mediaData)
 
     window.ThreadsDownloaderOverlay._processedMedia.add(video)
     logDebug(`影片 ${index} 成功添加按鈕`)
@@ -145,9 +94,9 @@ window.ThreadsDownloaderOverlay.processImages = function () {
       return
     }
 
-    const imgUrl = img.src || img.getAttribute("data-src")
-    const mediaInfo = window.ThreadsDownloaderOverlay.detectImage(img, imgUrl)
-    if (!mediaInfo) {
+    // 使用統一提取模組
+    const mediaData = window.ThreadsMediaExtractor.extractImage(picture)
+    if (!mediaData) {
       logDebug(`圖片 ${index} 無效，跳過`)
       return
     }
@@ -158,17 +107,12 @@ window.ThreadsDownloaderOverlay.processImages = function () {
       return
     }
 
-    if (window.ThreadsDownloaderOverlay.hasExistingButton(mediaContainer, "data-image-src", imgUrl)) {
+    if (window.ThreadsDownloaderOverlay.hasExistingButton(mediaContainer, "data-image-src", mediaData.url)) {
       window.ThreadsDownloaderOverlay._processedMedia.add(img)
       return
     }
 
-    window.ThreadsDownloaderOverlay.createOverlayButton(mediaContainer, {
-      type: "image",
-      url: imgUrl,
-      thumbnail: imgUrl,
-      element: img,
-    })
+    window.ThreadsDownloaderOverlay.createOverlayButton(mediaContainer, mediaData)
 
     window.ThreadsDownloaderOverlay._processedMedia.add(img)
     logDebug(`圖片 ${index} 成功添加按鈕`)

@@ -6,7 +6,7 @@
   "use strict"
 
   // 等待所有模組載入完成
-  if (!window.ThreadsDownloaderUtils || !window.ThreadsDownloaderButton || !window.ThreadsDownloaderOverlay) {
+  if (!window.ThreadsDownloaderUtils || !window.ThreadsMediaExtractor || !window.ThreadsDownloaderButton || !window.ThreadsDownloaderOverlay) {
     console.error("[Threads Downloader] 模組載入失敗，請檢查 manifest.json 中的載入順序")
     return
   }
