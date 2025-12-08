@@ -88,3 +88,36 @@ window.ThreadsFilenameGenerator.generateFilenameFromElement = function (options)
     addPrefix,
   })
 }
+
+/**
+ * 生成 ZIP 壓縮檔的檔名
+ * @param {Object} [postInfo] - 貼文資訊
+ * @param {string} [postInfo.username] - 使用者名稱
+ * @param {string} [postInfo.postId] - 貼文 ID
+ * @param {boolean} [addPrefix=true] - 是否添加 threads_ 前綴
+ * @returns {string} ZIP 檔名
+ * 
+ * @example
+ * // 有貼文資訊，有前綴
+ * generateZipFilename({ username: 'john', postId: 'ABC123' }, true)
+ * // 返回: 'threads_john-ABC123.zip'
+ * 
+ * @example
+ * // 有貼文資訊，無前綴
+ * generateZipFilename({ username: 'john', postId: 'ABC123' }, false)
+ * // 返回: 'john-ABC123.zip'
+ * 
+ * @example
+ * // 無貼文資訊
+ * generateZipFilename(null, true)
+ * // 返回: 'threads_media_1701234567890.zip'
+ */
+window.ThreadsFilenameGenerator.generateZipFilename = function (postInfo, addPrefix = true) {
+  const prefix = addPrefix ? "threads_" : ""
+  
+  if (postInfo && postInfo.username && postInfo.postId) {
+    return `${prefix}${postInfo.username}-${postInfo.postId}.zip`
+  }
+  
+  return `${prefix}media_${Date.now()}.zip`
+}

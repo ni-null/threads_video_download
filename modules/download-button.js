@@ -941,19 +941,27 @@ window.ThreadsDownloaderButton.downloadAllAsZip = async function (items, buttonE
 
     // 取得貼文資訊用於 ZIP 檔名
     const postInfo = findPostInfoFromElement(items[0].postContainer || items[0].element)
-    const zipFilename =
-      postInfo && postInfo.username && postInfo.postId ? `@${postInfo.username}-${postInfo.postId}.zip` : `threads_media_${Date.now()}.zip`
+    
+    // 使用統一的 ZIP 檔名生成器（與設定同步）
+    const zipFilename = window.ThreadsFilenameGenerator.generateZipFilename(
+      postInfo,
+      window.ThreadsDownloaderButton._enableFilenamePrefix !== false  // 從設定讀取
+    )
 
     buttonElement.innerHTML = `⏳ ${i18n("downloadProgress", ["0", String(total)])}`
 
     // 逐個下載並添加到 ZIP
     for (let i = 0; i < items.length; i++) {
       const item = items[i]
-      const ext = item.type === "video" ? ".mp4" : ".jpg"
-      const filename =
-        postInfo && postInfo.username && postInfo.postId
-          ? `@${postInfo.username}-${postInfo.postId}-${item.index}${ext}`
-          : `threads_${item.type}_${item.index}${ext}`
+      
+      // 使用統一的檔名生成器（與設定同步）
+      const filename = window.ThreadsFilenameGenerator.generateFilename({
+        type: item.type,
+        index: item.index,
+        postInfo: postInfo,
+        useTimestamp: false,
+        addPrefix: window.ThreadsDownloaderButton._enableFilenamePrefix !== false  // 從設定讀取
+      })
 
       try {
         // 使用 fetch 下載檔案
