@@ -2,15 +2,14 @@ import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import { build } from "esbuild"
-import JavaScriptObfuscator from "javascript-obfuscator"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const rootDir = path.join(__dirname, "..")
 const productDir = path.join(rootDir, "product")
 
-// 需要壓縮和混淆的 JS 檔案
-const jsFiles = ["background.js", "content.js", "popup.js", "modules/utils.js", "modules/download-button.js", "modules/media-overlay-button.js"]
+// 需要壓縮的 JS 檔案
+const jsFiles = ["background.js", "content.js", "popup.js", "modules/utils.js", "modules/filename-generator.js", "modules/media-extractor.js", "modules/download-button.js", "modules/media-position-finder.js", "modules/media-overlay-button.js"]
 
 // 需要直接複製的靜態檔案和資料夾
 const staticFiles = [
@@ -34,8 +33,8 @@ if (fs.existsSync(productDir)) {
 fs.mkdirSync(productDir, { recursive: true })
 console.log("   ✅ 已創建 product 資料夾\n")
 
-// 步驟 2: 壓縮和混淆 JS 檔案
-console.log("📦 步驟 2: 壓縮和混淆 JS 檔案")
+// 步驟 2: 壓縮 JS 檔案
+console.log("📦 步驟 2: 壓縮 JS 檔案")
 for (const jsFile of jsFiles) {
   const inputPath = path.join(rootDir, jsFile)
   const outputPath = path.join(productDir, jsFile)
@@ -63,41 +62,8 @@ for (const jsFile of jsFiles) {
       target: "es2020",
       format: "iife", // 立即執行函數
       outfile: outputPath,
-      write: false, // 不直接寫入，我們要先混淆
-    }).then((result) => {
-      let code = result.outputFiles[0].text
-
-      // 使用 javascript-obfuscator 進行混淆
-      const obfuscationResult = JavaScriptObfuscator.obfuscate(code, {
-        compact: true,
-        controlFlowFlattening: false, // 不要過度混淆，避免影響性能
-        deadCodeInjection: false,
-        debugProtection: false,
-        debugProtectionInterval: 0,
-        disableConsoleOutput: false, // 保留 console，方便調試
-        identifierNamesGenerator: "hexadecimal",
-        log: false,
-        numbersToExpressions: false,
-        renameGlobals: false, // 不重命名全局變量，避免破壞 Chrome API
-        selfDefending: false,
-        simplify: true,
-        splitStrings: false,
-        stringArray: true,
-        stringArrayCallsTransform: false,
-        stringArrayEncoding: ["base64"],
-        stringArrayIndexShift: true,
-        stringArrayRotate: true,
-        stringArrayShuffle: true,
-        stringArrayWrappersCount: 1,
-        stringArrayWrappersChainedCalls: true,
-        stringArrayWrappersParametersMaxCount: 2,
-        stringArrayWrappersType: "variable",
-        stringArrayThreshold: 0.75,
-        unicodeEscapeSequence: false,
-      })
-
-      // 寫入混淆後的代碼
-      fs.writeFileSync(outputPath, obfuscationResult.getObfuscatedCode())
+      write: true, // 直接寫入
+    }).then(() => {
 
       // 刪除臨時檔案
       if (fs.existsSync(tempPath)) {
