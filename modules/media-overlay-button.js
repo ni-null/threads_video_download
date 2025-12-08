@@ -316,6 +316,7 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
       type: mediaInfo.type,
       index: mediaIndex,
       useTimestamp: true, // 覆蓋按鈕使用時間戳
+      addPrefix: window.ThreadsDownloaderOverlay._enableFilenamePrefix !== false, // 從設定讀取
     })
 
     // 使用 Chrome Downloads API 下載

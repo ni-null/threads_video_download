@@ -246,5 +246,9 @@
   "reportIssue": {
     "message": "問題を報告",
     "description": "Report issue link"
+  },
+  "enableFilenamePrefix": {
+    "message": "ファイル名に threads プレフィックスを追加",
+    "description": "Toggle for adding threads prefix to filename"
   }
 }

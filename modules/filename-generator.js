@@ -39,21 +39,24 @@ window.ThreadsFilenameGenerator = window.ThreadsFilenameGenerator || {}
  * // 返回: 'threads_video_3.mp4'
  */
 window.ThreadsFilenameGenerator.generateFilename = function (options) {
-  const { type, index, postInfo, useTimestamp = false } = options
+  const { type, index, postInfo, useTimestamp = false, addPrefix = true } = options
 
   // 決定副檔名
   const ext = type === "video" ? ".mp4" : ".jpg"
+  
+  // 決定前綴
+  const prefix = addPrefix ? "threads_" : ""
 
   // 如果有完整的貼文資訊，使用標準格式
   if (postInfo && postInfo.username && postInfo.postId) {
-    return `@${postInfo.username}-${postInfo.postId}-${index}${ext}`
+    return `${prefix}${postInfo.username}-${postInfo.postId}-${index}${ext}`
   }
 
   // 如果沒有貼文資訊，根據設定決定是否使用時間戳
   if (useTimestamp) {
-    return `threads_${type}_${Date.now()}-${index}${ext}`
+    return `${prefix}${type}_${Date.now()}-${index}${ext}`
   } else {
-    return `threads_${type}_${index}${ext}`
+    return `${prefix}${type}_${index}${ext}`
   }
 }
 
@@ -69,7 +72,7 @@ window.ThreadsFilenameGenerator.generateFilename = function (options) {
  * @returns {string} 生成的檔名
  */
 window.ThreadsFilenameGenerator.generateFilenameFromElement = function (options) {
-  const { element, type, index, useTimestamp = false } = options
+  const { element, type, index, useTimestamp = false, addPrefix = true } = options
 
   // 使用 utils 模組中的方法提取貼文資訊
   let postInfo = null
@@ -82,5 +85,6 @@ window.ThreadsFilenameGenerator.generateFilenameFromElement = function (options)
     index,
     postInfo,
     useTimestamp,
+    addPrefix,
   })
 }

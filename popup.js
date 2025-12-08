@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const languageSelect = document.getElementById("languageSelect")
   const enableMediaMenuToggle = document.getElementById("enableMediaMenu")
   const enableSingleDownloadToggle = document.getElementById("enableSingleDownload")
+  const enableFilenamePrefixToggle = document.getElementById("enableFilenamePrefix")
   const enableDebugModeToggle = document.getElementById("enableDebugMode")
 
   // 調試日誌函數
@@ -80,19 +81,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 載入設定
   function loadSettings() {
-    chrome.storage.local.get(["enableMediaMenu", "enableSingleDownload", "language", "debugMode"], (result) => {
+    chrome.storage.local.get(["enableMediaMenu", "enableSingleDownload", "enableFilenamePrefix", "language", "debugMode"], (result) => {
       // 預設都啟用
       const mediaMenuEnabled = result.enableMediaMenu !== false
       const singleDownloadEnabled = result.enableSingleDownload !== false
+      const filenamePrefixEnabled = result.enableFilenamePrefix !== false // 預設啟用
       const debugModeEnabled = result.debugMode === true // 明確檢查是否為 true
       const language = result.language || "auto"
 
       enableMediaMenuToggle.checked = mediaMenuEnabled
       enableSingleDownloadToggle.checked = singleDownloadEnabled
+      enableFilenamePrefixToggle.checked = filenamePrefixEnabled
       enableDebugModeToggle.checked = debugModeEnabled
       languageSelect.value = language
 
-      logDebug("Settings loaded:", { mediaMenuEnabled, singleDownloadEnabled, debugModeEnabled, language })
+      logDebug("Settings loaded:", { mediaMenuEnabled, singleDownloadEnabled, filenamePrefixEnabled, debugModeEnabled, language })
     })
   }
 
@@ -101,6 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const settings = {
       enableMediaMenu: enableMediaMenuToggle.checked,
       enableSingleDownload: enableSingleDownloadToggle.checked,
+      enableFilenamePrefix: enableFilenamePrefixToggle.checked,
       debugMode: enableDebugModeToggle.checked,
       language: languageSelect.value,
     }
@@ -133,6 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 設定開關事件監聽
   enableMediaMenuToggle.addEventListener("change", saveSettings)
   enableSingleDownloadToggle.addEventListener("change", saveSettings)
+  enableFilenamePrefixToggle.addEventListener("change", saveSettings)
   enableDebugModeToggle.addEventListener("change", saveSettings)
 
   // 語言切換事件

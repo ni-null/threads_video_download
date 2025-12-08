@@ -39,9 +39,9 @@
           </label>
         </div>
         <div class="setting-item">
-          <label for="enableDebugMode" data-i18n="enableDebugMode">開發者模式 (Debug)</label>
+          <label for="enableFilenamePrefix" data-i18n="enableFilenamePrefix">檔案名稱添加 threads 前綴</label>
           <label class="toggle-switch">
-            <input type="checkbox" id="enableDebugMode" />
+            <input type="checkbox" id="enableFilenamePrefix" checked />
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -54,8 +54,12 @@
           <span class="divider">|</span>
           <span class="developer"><span data-i18n="developer">開發者</span>: <a href="https://github.com/ninull" target="_blank">ninull</a></span>
         </div>
-        <div class="report-issue">
-          <a href="https://github.com/ni-null/threads_video_download/issues" target="_blank" data-i18n="reportIssue">🐛 問題回報</a>
+        <div class="footer-actions">
+          <label class="debug-toggle" title="Developer Mode">
+            <input type="checkbox" id="enableDebugMode" />
+            <span class="debug-icon">🐛</span>
+          </label>
+          <a href="https://github.com/ni-null/threads_video_download/issues" target="_blank" data-i18n="reportIssue" class="report-link">🐛 問題回報</a>
         </div>
       </div>
     </div>

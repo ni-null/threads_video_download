@@ -443,6 +443,66 @@ body {
   background: var(--bg-hover);
 }
 
+/* Footer Actions */
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.debug-toggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.debug-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.debug-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.debug-icon {
+  font-size: 14px;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.debug-toggle input:checked ~ .debug-icon {
+  opacity: 1;
+  filter: brightness(1.2);
+}
+
+.report-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  font-size: 11px;
+}
+
+.report-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
 /* 通知 */
 .notification {
   position: fixed;

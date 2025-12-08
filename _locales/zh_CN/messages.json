@@ -244,7 +244,11 @@
     "description": "Auto language option"
   },
   "reportIssue": {
-    "message": "问题反馈",
+    "message": "问题回报",
     "description": "Report issue link"
+  },
+  "enableFilenamePrefix": {
+    "message": "文件名称添加 threads 前缀",
+    "description": "Toggle for adding threads prefix to filename"
   }
 }

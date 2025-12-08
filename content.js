@@ -21,6 +21,7 @@
   let settings = {
     enableMediaMenu: true,
     enableSingleDownload: true,
+    enableFilenamePrefix: true,
     debugMode: false,
     language: "auto",
   }
@@ -30,9 +31,10 @@
     // 先初始化語言
     await window.ThreadsDownloaderUtils.initLanguage()
     
-    chrome.storage.local.get(["enableMediaMenu", "enableSingleDownload", "debugMode", "language"], (result) => {
+    chrome.storage.local.get(["enableMediaMenu", "enableSingleDownload", "enableFilenamePrefix", "debugMode", "language"], (result) => {
       settings.enableMediaMenu = result.enableMediaMenu !== false
       settings.enableSingleDownload = result.enableSingleDownload !== false
+      settings.enableFilenamePrefix = result.enableFilenamePrefix !== false
       settings.debugMode = result.debugMode === true
       settings.language = result.language || "auto"
 
@@ -42,9 +44,11 @@
       }
       if (window.ThreadsDownloaderButton) {
         window.ThreadsDownloaderButton._debugMode = settings.debugMode
+        window.ThreadsDownloaderButton._enableFilenamePrefix = settings.enableFilenamePrefix
       }
       if (window.ThreadsDownloaderOverlay) {
         window.ThreadsDownloaderOverlay._debugMode = settings.debugMode
+        window.ThreadsDownloaderOverlay._enableFilenamePrefix = settings.enableFilenamePrefix
       }
 
       logDebug("設定已載入:", settings)
@@ -91,11 +95,13 @@
       // 更新按鈕模組的 debug 模式
       if (window.ThreadsDownloaderButton) {
         window.ThreadsDownloaderButton._debugMode = settings.debugMode === true
+        window.ThreadsDownloaderButton._enableFilenamePrefix = settings.enableFilenamePrefix !== false
       }
 
       // 更新覆蓋按鈕模組的 debug 模式
       if (window.ThreadsDownloaderOverlay) {
         window.ThreadsDownloaderOverlay._debugMode = settings.debugMode === true
+        window.ThreadsDownloaderOverlay._enableFilenamePrefix = settings.enableFilenamePrefix !== false
       }
 
       updateUIBySettings()

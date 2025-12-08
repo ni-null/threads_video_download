@@ -246,5 +246,9 @@
   "reportIssue": {
     "message": "문제 보고",
     "description": "Report issue link"
+  },
+  "enableFilenamePrefix": {
+    "message": "파일 이름에 threads 접두사 추가",
+    "description": "Toggle for adding threads prefix to filename"
   }
 }

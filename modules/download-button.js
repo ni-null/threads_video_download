@@ -483,33 +483,77 @@ window.ThreadsDownloaderButton.extractMediaFromPost = function (postContainer) {
     if (videoUrl && videoUrl !== "about:blank") {
       let poster = video.poster || video.getAttribute("data-poster") || ""
 
-      // 如果沒有 poster，嘗試從外層容器找縮圖
+      // 如果沒有 poster，根據 Threads DOM 結構查找縮圖
       if (!poster) {
-        // 方法1: 向上找到包含 video 和 img 的容器（Threads 的影片縮圖通常和 video 在同一個父容器內）
-        let searchContainer = video.parentElement
+        // 策略：從 video 向上遍歷每一層父容器，在每層中查找 img 標籤
+        // Threads 結構：img 和 video 在共同父容器的不同分支
+        let currentContainer = video.parentElement
         let depth = 0
-        while (searchContainer && depth < 8 && !poster) {
-          // 找該容器內的第一個 img（通常是縮圖）
-          const img = searchContainer.querySelector('img[src*="cdninstagram"], img[src*="fbcdn"]')
-          if (img && img.src && img !== video) {
-            poster = img.src
-            break
+        
+        while (currentContainer && depth < 12 && !poster) {
+          // 在當前層級查找所有 img 標籤
+          const imgs = currentContainer.querySelectorAll('img')
+          
+          if (imgs.length > 0) {
+            logDebug(`[選單] 第 ${depth} 層找到 ${imgs.length} 個 img 標籤`)
+            
+            for (const img of imgs) {
+              const imgSrc = img.src || ''
+              
+              // 必須是 CDN 圖片
+              if (!imgSrc || (!imgSrc.includes('fbcdn.net') && !imgSrc.includes('cdninstagram'))) {
+                continue
+              }
+              
+              // 檢查圖片是否可能是縮圖
+              // 1. 優先：包含 jpg 且來自 t51.2885（Threads 媒體伺服器）
+              if (imgSrc.includes('.jpg') && imgSrc.includes('t51.2885')) {
+                poster = imgSrc
+                logDebug("[選單] ✓ 找到 Threads JPG 縮圖:", poster.substring(0, 80))
+                break
+              }
+              
+              // 2. 次選：包含 cover_frame（封面幀關鍵字）
+              if (imgSrc.includes('cover_frame')) {
+                poster = imgSrc
+                logDebug("[選單] ✓ 找到封面幀:", poster.substring(0, 80))
+                break
+              }
+              
+              // 3. 備選：尺寸合理的圖片（寬高比接近 9:16 的直式影片）
+              if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                const aspectRatio = img.naturalWidth / img.naturalHeight
+                // 直式影片縮圖：0.5 < 寬高比 < 0.7
+                if (aspectRatio > 0.5 && aspectRatio < 0.7 && img.naturalWidth >= 200) {
+                  poster = imgSrc
+                  logDebug("[選單] ✓ 找到直式縮圖 (寬高比):", aspectRatio.toFixed(2), poster.substring(0, 80))
+                  break
+                }
+                // 橫式影片縮圖：1.3 < 寬高比 < 2.0
+                if (aspectRatio > 1.3 && aspectRatio < 2.0 && img.naturalWidth >= 300) {
+                  poster = imgSrc
+                  logDebug("[選單] ✓ 找到橫式縮圖 (寬高比):", aspectRatio.toFixed(2), poster.substring(0, 80))
+                  break
+                }
+              }
+              
+              // 4. 兜底：任何 CDN 上的 JPG 圖片
+              if (!poster && imgSrc.includes('.jpg')) {
+                poster = imgSrc
+                logDebug("[選單] ✓ 找到 JPG 圖片（兜底）:", poster.substring(0, 80))
+              }
+            }
           }
-          searchContainer = searchContainer.parentElement
+          
+          if (poster) break
+          
+          // 向上一層
+          currentContainer = currentContainer.parentElement
           depth++
         }
-      }
-
-      // 方法2: 嘗試找 video 的前一個兄弟元素（有時縮圖在 video 之前）
-      if (!poster && video.parentElement) {
-        const siblings = video.parentElement.children
-        for (let i = 0; i < siblings.length; i++) {
-          const sibling = siblings[i]
-          if (sibling === video) break
-          if (sibling.tagName === "IMG" && sibling.src) {
-            poster = sibling.src
-            break
-          }
+        
+        if (!poster) {
+          logDebug("[選單] ✗ 遍歷 ", depth, " 層未找到縮圖")
         }
       }
 
@@ -780,6 +824,7 @@ window.ThreadsDownloaderButton.createMediaItem = function (container, item, menu
     type: item.type,
     index: item.index,
     useTimestamp: false, // 下載按鈕不使用時間戳
+    addPrefix: window.ThreadsDownloaderButton._enableFilenamePrefix !== false, // 從設定讀取
   })
 
   // 創建項目元素
@@ -892,6 +937,7 @@ window.ThreadsDownloaderButton.createMediaItem = function (container, item, menu
 
   if (posterUrl) {
     // 有縮圖 URL，直接使用
+    logDebug("[選單縮圖] 直接使用 URL:", posterUrl)
     const thumbnail = document.createElement("img")
     thumbnail.src = posterUrl
     thumbnail.style.cssText = `
@@ -901,34 +947,9 @@ window.ThreadsDownloaderButton.createMediaItem = function (container, item, menu
     `
     thumbnailContainer.appendChild(thumbnail)
     itemDiv.appendChild(thumbnailContainer)
-  } else if (item.type === "video" && item.element) {
-    // 沒有縮圖但有影片元素，嘗試從影片擷取一幀
-    window.ThreadsDownloaderButton.captureVideoFrame(item.element, item.url)
-      .then((frameDataUrl) => {
-        if (frameDataUrl) {
-          const thumbnail = document.createElement("img")
-          thumbnail.src = frameDataUrl
-          thumbnail.style.cssText = `
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        `
-          thumbnailContainer.innerHTML = ""
-          thumbnailContainer.appendChild(thumbnail)
-        }
-      })
-      .catch(() => {
-        // 擷取失敗，保持圖標
-      })
-
-    // 先顯示圖標，等擷取完成後再替換
-    const icon = document.createElement("span")
-    icon.textContent = "🎬"
-    icon.style.fontSize = "20px"
-    thumbnailContainer.appendChild(icon)
-    itemDiv.appendChild(thumbnailContainer)
   } else {
-    // 沒有縮圖也沒有影片元素，顯示圖標
+    // 沒有縮圖，顯示圖標（不使用提取模式）
+    logDebug("[選單縮圖] 沒有 poster URL，顯示圖標")
     const icon = document.createElement("span")
     icon.textContent = item.type === "video" ? "🎬" : "🖼️"
     icon.style.fontSize = "20px"
@@ -936,18 +957,53 @@ window.ThreadsDownloaderButton.createMediaItem = function (container, item, menu
     itemDiv.appendChild(thumbnailContainer)
   }
 
-  // 標籤 - 顯示檔案名稱
+  // 標籤 - 顯示檔案名稱（分離檔名和副檔名）
   const label = document.createElement("span")
   label.className = "threads-item-label"
-  label.textContent = filename
   label.style.cssText = `
     flex: 1;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     font-size: 12px;
+    display: flex;
+    align-items: center;
   `
   label.title = filename // 滑鼠懸停時顯示完整檔名
+  
+  // 分離檔名和副檔名
+  const lastDotIndex = filename.lastIndexOf('.')
+  if (lastDotIndex > 0) {
+    const nameWithoutExt = filename.substring(0, lastDotIndex)
+    const extension = filename.substring(lastDotIndex) // 包含 "."
+    
+    // 檔名部分（可省略）
+    const nameSpan = document.createElement("span")
+    nameSpan.textContent = nameWithoutExt
+    nameSpan.style.cssText = `
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex-shrink: 1;
+    `
+    
+    // 副檔名部分（固定顯示）
+    const extSpan = document.createElement("span")
+    extSpan.textContent = extension
+    extSpan.style.cssText = `
+      flex-shrink: 0;
+      white-space: nowrap;
+    `
+    
+    label.appendChild(nameSpan)
+    label.appendChild(extSpan)
+  } else {
+    // 沒有副檔名，直接顯示
+    label.textContent = filename
+    label.style.cssText += `
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    `
+  }
   itemDiv.appendChild(label)
 
   // 下載圖標
@@ -1106,7 +1162,7 @@ window.ThreadsDownloaderButton.downloadAllAsZip = async function (items, buttonE
   }
 }
 
-// 下載影片
+// 下載影片（保留供其他模組調用）
 window.ThreadsDownloaderButton.downloadVideoFromPage = function (url, filename) {
   const { showPageNotification, i18n } = window.ThreadsDownloaderUtils
   // 創建隱藏的 a 標籤下載
@@ -1120,92 +1176,4 @@ window.ThreadsDownloaderButton.downloadVideoFromPage = function (url, filename) 
 
   // 顯示通知
   showPageNotification(i18n("downloadStarted", filename))
-}
-
-/**
- * 從影片擷取一幀作為縮圖
- * @param {HTMLVideoElement} videoElement - 影片元素
- * @param {string} videoUrl - 影片 URL（備用）
- * @returns {Promise<string|null>} - 返回 base64 圖片資料或 null
- */
-window.ThreadsDownloaderButton.captureVideoFrame = function (videoElement, videoUrl) {
-  return new Promise((resolve) => {
-    try {
-      // 方法1: 如果影片已經載入且有 crossOrigin，直接從現有元素擷取
-      if (videoElement && videoElement.readyState >= 2 && videoElement.crossOrigin === "anonymous") {
-        const canvas = document.createElement("canvas")
-        canvas.width = videoElement.videoWidth || 160
-        canvas.height = videoElement.videoHeight || 90
-        const ctx = canvas.getContext("2d")
-        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
-
-        try {
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.8)
-          if (dataUrl && dataUrl !== "data:,") {
-            resolve(dataUrl)
-            return
-          }
-        } catch (e) {
-          // 擷取失敗，繼續嘗試方法2
-          logDebug("擷取現有影片失敗 (CORS):", e.message)
-        }
-      }
-
-      // 方法2: 創建新的影片元素來擷取（設定 crossOrigin 避免 CORS 問題）
-      if (videoUrl) {
-        const tempVideo = document.createElement("video")
-        tempVideo.crossOrigin = "anonymous"
-        tempVideo.muted = true
-        tempVideo.playsInline = true
-
-        const timeoutId = setTimeout(() => {
-          tempVideo.src = ""
-          resolve(null)
-        }, 5000) // 5 秒超時
-
-        tempVideo.onloadeddata = () => {
-          // 跳到第一幀
-          tempVideo.currentTime = 0.1
-        }
-
-        tempVideo.onseeked = () => {
-          clearTimeout(timeoutId)
-          try {
-            const canvas = document.createElement("canvas")
-            canvas.width = tempVideo.videoWidth || 160
-            canvas.height = tempVideo.videoHeight || 90
-            const ctx = canvas.getContext("2d")
-            ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height)
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.8)
-            tempVideo.src = ""
-
-            if (dataUrl && dataUrl !== "data:,") {
-              resolve(dataUrl)
-            } else {
-              resolve(null)
-            }
-          } catch (e) {
-            // CORS 或其他錯誤，無法擷取縮圖
-            logDebug("擷取影片幀失敗 (可能是 CORS 限制):", e.message)
-            tempVideo.src = ""
-            resolve(null)
-          }
-        }
-
-        tempVideo.onerror = () => {
-          clearTimeout(timeoutId)
-          tempVideo.src = ""
-          resolve(null)
-        }
-
-        tempVideo.src = videoUrl
-        tempVideo.load()
-      } else {
-        resolve(null)
-      }
-    } catch (e) {
-      logDebug("captureVideoFrame 錯誤:", e.message)
-      resolve(null)
-    }
-  })
 }
