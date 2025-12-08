@@ -752,16 +752,13 @@ window.ThreadsDownloaderButton.createMediaItem = function (container, item, menu
     return null
   }
 
-  // 生成檔名
-  let filename
-  const postInfo = findPostInfoFromElement(item.postContainer || item.element)
-  const ext = item.type === "video" ? ".mp4" : ".jpg"
-
-  if (postInfo && postInfo.username && postInfo.postId) {
-    filename = `@${postInfo.username}-${postInfo.postId}-${item.index}${ext}`
-  } else {
-    filename = `threads_${item.type}_${item.index}${ext}`
-  }
+  // 使用統一的檔名生成器
+  const filename = window.ThreadsFilenameGenerator.generateFilenameFromElement({
+    element: item.postContainer || item.element,
+    type: item.type,
+    index: item.index,
+    useTimestamp: false, // 下載按鈕不使用時間戳
+  })
 
   // 創建項目元素
   const itemDiv = document.createElement("div")

@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Threads Downloader Pro - 媒体下载器",
+    "message": "Threads 视频保存器",
     "description": "Extension name"
   },
   "extDescription": {
@@ -120,10 +120,6 @@
   "image": {
     "message": "图片",
     "description": "Image label"
-  },
-  "popupTitle": {
-    "message": "Threads 视频下载器",
-    "description": "Popup window title"
   },
   "popupScanning": {
     "message": "扫描中...",

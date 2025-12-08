@@ -176,106 +176,11 @@ window.ThreadsDownloaderOverlay.processImages = function () {
 }
 
 /**
- * 檢查是否為 Threads 媒體容器
- */
-window.ThreadsDownloaderOverlay.isThreadsMediaContainer = function (element) {
-  const styleStr = element.style.cssText || ""
-  return (styleStr.includes("--x-borderRadius") || styleStr.includes("--x-aspectRatio")) && element.offsetWidth > 100 && element.offsetHeight > 50
-}
-
-/**
- * 檢查是否為 Grid 輪播容器
- */
-window.ThreadsDownloaderOverlay.isGridContainer = function (element) {
-  return element.style.cssText.includes("--x-gridTemplateColumns")
-}
-
-/**
- * 確保容器有 position: relative
- */
-window.ThreadsDownloaderOverlay.ensureRelativePosition = function (container) {
-  if (window.getComputedStyle(container).position === "static") {
-    container.style.position = "relative"
-  }
-}
-
-/**
- * 找最近的 Threads 媒體容器
- */
-window.ThreadsDownloaderOverlay.findThreadsContainer = function (element, maxDepth = 15) {
-  let parent = element.parentElement
-  let depth = 0
-
-  while (parent && depth < maxDepth) {
-    if (window.ThreadsDownloaderOverlay.isGridContainer(parent)) {
-      return { container: null, gridParent: parent, depth }
-    }
-    if (window.ThreadsDownloaderOverlay.isThreadsMediaContainer(parent)) {
-      return { container: parent, gridParent: null, depth }
-    }
-    parent = parent.parentElement
-    depth++
-  }
-  return { container: null, gridParent: null, depth }
-}
-
-/**
- * 找備用容器（position:relative 或 borderRadius）
- */
-window.ThreadsDownloaderOverlay.findFallbackContainer = function (element, maxDepth = 15) {
-  let parent = element.parentElement
-  let depth = 0
-
-  while (parent && depth < maxDepth) {
-    const style = window.getComputedStyle(parent)
-    if (parent.offsetWidth > 100 && parent.offsetHeight > 100) {
-      if (style.position === "relative" || style.position === "absolute" || (style.borderRadius && style.borderRadius !== "0px")) {
-        return { container: parent, depth }
-      }
-    }
-    parent = parent.parentElement
-    depth++
-  }
-  return { container: null, depth: -1 }
-}
-
-/**
  * 找到適合放置覆蓋按鈕的媒體容器
+ * 使用 ThreadsMediaPositionFinder 模組
  */
 window.ThreadsDownloaderOverlay.findMediaContainer = function (element) {
-  if (!element) return null
-
-  // 第一步：查找 Threads 容器或 Grid 容器
-  const { container, gridParent } = window.ThreadsDownloaderOverlay.findThreadsContainer(element)
-
-  if (container) {
-    window.ThreadsDownloaderOverlay.ensureRelativePosition(container)
-    return container
-  }
-
-  // 第二步：如果找到 Grid 容器，往下找直接子容器
-  if (gridParent) {
-    const { container: fallback } = window.ThreadsDownloaderOverlay.findFallbackContainer(element, 10)
-    if (fallback && fallback !== gridParent) {
-      window.ThreadsDownloaderOverlay.ensureRelativePosition(fallback)
-      return fallback
-    }
-  }
-
-  // 第三步：查找備用容器
-  const { container: fallback } = window.ThreadsDownloaderOverlay.findFallbackContainer(element)
-  if (fallback) {
-    window.ThreadsDownloaderOverlay.ensureRelativePosition(fallback)
-    return fallback
-  }
-
-  // 第四步：使用直接父容器
-  if (element.parentElement) {
-    window.ThreadsDownloaderOverlay.ensureRelativePosition(element.parentElement)
-    return element.parentElement
-  }
-
-  return null
+  return window.ThreadsMediaPositionFinder.findMediaContainer(element)
 }
 
 /**
@@ -379,10 +284,6 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
     e.stopPropagation()
     e.preventDefault()
 
-    // 生成檔名
-    const ext = mediaInfo.type === "video" ? ".mp4" : ".jpg"
-    let filename
-
     // 先找到貼文容器（包含 /post/ 連結的容器）
     let postContainer = mediaInfo.element
     let depth = 0
@@ -392,32 +293,6 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
       }
       postContainer = postContainer.parentElement
       depth++
-    }
-
-    // 從貼文容器取得貼文資訊
-    let postInfo = null
-    if (postContainer) {
-      const postLink = postContainer.querySelector('a[href*="/post/"]')
-      if (postLink && postLink.href) {
-        const match = postLink.href.match(/@([^/]+)\/post\/([^/?#]+)/)
-        if (match) {
-          postInfo = {
-            username: match[1],
-            postId: match[2],
-          }
-        }
-      }
-    }
-
-    // 如果還是沒找到，嘗試從頁面 URL 解析
-    if (!postInfo) {
-      const pageMatch = window.location.href.match(/@([^/]+)\/post\/([^/?#]+)/)
-      if (pageMatch) {
-        postInfo = {
-          username: pageMatch[1],
-          postId: pageMatch[2],
-        }
-      }
     }
 
     // 計算此媒體在貼文中的索引
@@ -435,11 +310,13 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
       }
     }
 
-    if (postInfo && postInfo.username && postInfo.postId) {
-      filename = `@${postInfo.username}-${postInfo.postId}-${mediaIndex}${ext}`
-    } else {
-      filename = `threads_${mediaInfo.type}_${Date.now()}-${mediaIndex}${ext}`
-    }
+    // 使用統一的檔名生成器
+    const filename = window.ThreadsFilenameGenerator.generateFilenameFromElement({
+      element: postContainer || mediaInfo.element,
+      type: mediaInfo.type,
+      index: mediaIndex,
+      useTimestamp: true, // 覆蓋按鈕使用時間戳
+    })
 
     // 使用 Chrome Downloads API 下載
     chrome.runtime.sendMessage(
@@ -450,19 +327,9 @@ window.ThreadsDownloaderOverlay.createOverlayButton = function (container, media
       },
       (response) => {
         if (response && response.success) {
-          btn.innerHTML = "✅"
           showPageNotification(i18n("downloadStarted", filename))
-
-          setTimeout(() => {
-            btn.innerHTML = `<img src="${downloadIconUrl}" alt="下載" style="width: 20px; height: 20px;">`
-          }, 1500)
         } else {
-          btn.innerHTML = "❌"
           showPageNotification(i18n("downloadFailed", filename))
-
-          setTimeout(() => {
-            btn.innerHTML = `<img src="${downloadIconUrl}" alt="下載" style="width: 20px; height: 20px;">`
-          }, 2000)
         }
       }
     )

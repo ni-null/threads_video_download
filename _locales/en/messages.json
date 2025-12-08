@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Threads Downloader Pro - Media Saver",
+    "message": "Threads Video Saver",
     "description": "Extension name"
   },
   "extDescription": {
@@ -120,10 +120,6 @@
   "image": {
     "message": "Image",
     "description": "Image label"
-  },
-  "popupTitle": {
-    "message": "Threads Video Downloader",
-    "description": "Popup window title"
   },
   "popupScanning": {
     "message": "Scanning...",

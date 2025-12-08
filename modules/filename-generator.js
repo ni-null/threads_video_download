@@ -1,0 +1,86 @@
+// 檔案名稱生成器模組 - 統一管理下載檔案的命名規則
+window.ThreadsFilenameGenerator = window.ThreadsFilenameGenerator || {}
+
+/**
+ * 生成下載檔案的檔名
+ * @param {Object} options - 檔名生成選項
+ * @param {string} options.type - 媒體類型 ('video' 或 'image')
+ * @param {number} options.index - 媒體索引 (1-based)
+ * @param {Object} [options.postInfo] - 貼文資訊
+ * @param {string} [options.postInfo.username] - 使用者名稱
+ * @param {string} [options.postInfo.postId] - 貼文 ID
+ * @param {boolean} [options.useTimestamp=false] - 無貼文資訊時是否使用時間戳
+ * @returns {string} 生成的檔名
+ * 
+ * @example
+ * // 有貼文資訊
+ * generateFilename({
+ *   type: 'video',
+ *   index: 1,
+ *   postInfo: { username: 'john', postId: 'ABC123' }
+ * })
+ * // 返回: '@john-ABC123-1.mp4'
+ * 
+ * @example
+ * // 無貼文資訊，使用時間戳
+ * generateFilename({
+ *   type: 'image',
+ *   index: 2,
+ *   useTimestamp: true
+ * })
+ * // 返回: 'threads_image_1701234567890-2.jpg'
+ * 
+ * @example
+ * // 無貼文資訊，不使用時間戳
+ * generateFilename({
+ *   type: 'video',
+ *   index: 3
+ * })
+ * // 返回: 'threads_video_3.mp4'
+ */
+window.ThreadsFilenameGenerator.generateFilename = function (options) {
+  const { type, index, postInfo, useTimestamp = false } = options
+
+  // 決定副檔名
+  const ext = type === "video" ? ".mp4" : ".jpg"
+
+  // 如果有完整的貼文資訊，使用標準格式
+  if (postInfo && postInfo.username && postInfo.postId) {
+    return `11@${postInfo.username}-${postInfo.postId}-${index}${ext}`
+  }
+
+  // 如果沒有貼文資訊，根據設定決定是否使用時間戳
+  if (useTimestamp) {
+    return `threads_${type}_${Date.now()}-${index}${ext}`
+  } else {
+    return `threads_${type}_${index}${ext}`
+  }
+}
+
+/**
+ * 從元素中提取貼文資訊並生成檔名
+ * 這是一個便捷方法，結合了貼文資訊提取和檔名生成
+ * 
+ * @param {Object} options - 選項
+ * @param {HTMLElement} options.element - DOM 元素 (用於尋找貼文資訊)
+ * @param {string} options.type - 媒體類型 ('video' 或 'image')
+ * @param {number} options.index - 媒體索引
+ * @param {boolean} [options.useTimestamp=false] - 無貼文資訊時是否使用時間戳
+ * @returns {string} 生成的檔名
+ */
+window.ThreadsFilenameGenerator.generateFilenameFromElement = function (options) {
+  const { element, type, index, useTimestamp = false } = options
+
+  // 使用 utils 模組中的方法提取貼文資訊
+  let postInfo = null
+  if (window.ThreadsDownloaderUtils && window.ThreadsDownloaderUtils.findPostInfoFromElement) {
+    postInfo = window.ThreadsDownloaderUtils.findPostInfoFromElement(element)
+  }
+
+  return window.ThreadsFilenameGenerator.generateFilename({
+    type,
+    index,
+    postInfo,
+    useTimestamp,
+  })
+}

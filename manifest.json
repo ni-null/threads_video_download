@@ -24,7 +24,7 @@
   "content_scripts": [
     {
       "matches": ["https://www.threads.com/*"],
-      "js": ["lib/jszip.min.js", "modules/utils.js", "modules/download-button.js", "modules/media-overlay-button.js", "content.js"],
+      "js": ["lib/jszip.min.js", "modules/utils.js", "modules/filename-generator.js", "modules/download-button.js", "modules/media-position-finder.js", "modules/media-overlay-button.js", "content.js"],
       "run_at": "document_idle"
     }
   ],

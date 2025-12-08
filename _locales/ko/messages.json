@@ -1,6 +1,6 @@
 {
   "extName": {
-    "message": "Threads Downloader Pro - 미디어 다운로더",
+    "message": "Threads 비디오 세이버",
     "description": "Extension name"
   },
   "extDescription": {
@@ -120,10 +120,6 @@
   "image": {
     "message": "이미지",
     "description": "Image label"
-  },
-  "popupTitle": {
-    "message": "Threads 비디오 다운로더",
-    "description": "Popup window title"
   },
   "popupScanning": {
     "message": "스캔 중...",
