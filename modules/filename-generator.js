@@ -95,29 +95,35 @@ window.ThreadsFilenameGenerator.generateFilenameFromElement = function (options)
  * @param {string} [postInfo.username] - 使用者名稱
  * @param {string} [postInfo.postId] - 貼文 ID
  * @param {boolean} [addPrefix=true] - 是否添加 threads_ 前綴
+ * @param {string} [tabType='all'] - tab 類型 ('all', 'video', 'image')
  * @returns {string} ZIP 檔名
  * 
  * @example
- * // 有貼文資訊，有前綴
- * generateZipFilename({ username: 'john', postId: 'ABC123' }, true)
- * // 返回: 'threads_john-ABC123.zip'
+ * // 有貼文資訊，全部
+ * generateZipFilename({ username: 'john', postId: 'ABC123' }, true, 'all')
+ * // 返回: 'threads_john-ABC123-all.zip'
  * 
  * @example
- * // 有貼文資訊，無前綴
- * generateZipFilename({ username: 'john', postId: 'ABC123' }, false)
- * // 返回: 'john-ABC123.zip'
+ * // 有貼文資訊，影片
+ * generateZipFilename({ username: 'john', postId: 'ABC123' }, true, 'video')
+ * // 返回: 'threads_john-ABC123-video.zip'
+ * 
+ * @example
+ * // 有貼文資訊，相片
+ * generateZipFilename({ username: 'john', postId: 'ABC123' }, true, 'image')
+ * // 返回: 'threads_john-ABC123-image.zip'
  * 
  * @example
  * // 無貼文資訊
- * generateZipFilename(null, true)
- * // 返回: 'threads_media_1701234567890.zip'
+ * generateZipFilename(null, true, 'all')
+ * // 返回: 'threads_all.zip'
  */
-window.ThreadsFilenameGenerator.generateZipFilename = function (postInfo, addPrefix = true) {
+window.ThreadsFilenameGenerator.generateZipFilename = function (postInfo, addPrefix = true, tabType = 'all') {
   const prefix = addPrefix ? "threads_" : ""
   
   if (postInfo && postInfo.username && postInfo.postId) {
-    return `${prefix}${postInfo.username}-${postInfo.postId}.zip`
+    return `${prefix}${postInfo.username}-${postInfo.postId}-${tabType}.zip`
   }
   
-  return `${prefix}media_${Date.now()}.zip`
+  return `${prefix}${tabType}.zip`
 }

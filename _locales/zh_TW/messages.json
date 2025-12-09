@@ -250,5 +250,57 @@
   "enableFilenamePrefix": {
     "message": "檔案名稱添加 threads 前綴",
     "description": "Toggle for adding threads prefix to filename"
+  },
+  "modalTitle": {
+    "message": "Threads 影片下載器",
+    "description": "Modal window title"
+  },
+  "modalVersion": {
+    "message": "版本",
+    "description": "Version label in modal"
+  },
+  "modalFeatures": {
+    "message": "主要功能",
+    "description": "Features section title"
+  },
+  "modalFeature1": {
+    "message": "批量下載媒體",
+    "description": "Feature 1"
+  },
+  "modalFeature2": {
+    "message": "支持打包為 ZIP",
+    "description": "Feature 2"
+  },
+  "modalFeature3": {
+    "message": "多語言支持",
+    "description": "Feature 3"
+  },
+  "modalFeature4": {
+    "message": "隱私友好",
+    "description": "Feature 4"
+  },
+  "modalDisclaimer": {
+    "message": "完全免費使用，所有處理均在您的設備上完成，不上傳任何資料到伺服器。本應用不含廣告，也不以任何方式進行營利。",
+    "description": "Disclaimer text"
+  },
+  "modalDeveloper": {
+    "message": "開發者",
+    "description": "Developer label"
+  },
+  "modalContact": {
+    "message": "聯絡",
+    "description": "Contact label"
+  },
+  "modalGitHub": {
+    "message": "GitHub",
+    "description": "GitHub label"
+  },
+  "modalGitHubRepo": {
+    "message": "Threads-Video-Saver-Chrome",
+    "description": "GitHub repository name"
+  },
+  "modalGitHubStar": {
+    "message": "⭐ 請給一個星星",
+    "description": "Star request text"
   }
 }

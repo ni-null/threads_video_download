@@ -386,8 +386,6 @@ window.ThreadsDownloaderButton.createDownloadButton = function (btnContainer, po
     border: 1px solid #ddd;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    min-width: 200px;
-    max-width: 300px;
     z-index: 999999;
     padding: 8px 0;
     max-height: 400px;
@@ -502,20 +500,73 @@ window.ThreadsDownloaderButton.updateDownloadMenu = function (menu, media) {
   }
 
   // Tab 容器
-  const tabContainer = document.createElement("div")
-  tabContainer.className = "threads-menu-tabs"
-  tabContainer.style.cssText = `
+  // Tab 容器（包含 tab 和 info 圖示）
+  const tabHeader = document.createElement("div")
+  tabHeader.className = "threads-menu-tab-header"
+  tabHeader.style.cssText = `
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     border-bottom: 2px solid #eee;
     padding: 0 8px;
   `
 
-  // 創建三個 tab
-  const tabs = [
-    { id: "all", label: i18n("tabAll", String(totalCount)), filter: "all" },
-    { id: "videos", label: i18n("tabVideos", String(media.videos.length)), filter: "video" },
-    { id: "images", label: i18n("tabImages", String(media.images.length)), filter: "image" },
-  ]
+  const tabContainer = document.createElement("div")
+  tabContainer.className = "threads-menu-tabs"
+  tabContainer.style.cssText = `
+    display: flex;
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  `
+  // Info 圖示按鈕
+  const infoBtn = document.createElement("button")
+  infoBtn.className = "threads-menu-info-btn"
+  infoBtn.title = "應用程式資訊"
+  let infoIconUrl = ""
+  try {
+    infoIconUrl = chrome.runtime.getURL("image/info-circle-svgrepo-com.svg")
+  } catch (error) {
+    infoIconUrl = ""
+  }
+  infoBtn.innerHTML = infoIconUrl
+    ? `<img src="${infoIconUrl}" alt="info" style="width: 20px; height: 20px;">`
+    : "ⓘ"
+  infoBtn.style.cssText = `
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #666;
+    padding: 8px 12px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  `
+
+  infoBtn.addEventListener("mouseenter", () => {
+    infoBtn.style.color = "#667eea"
+  })
+
+  infoBtn.addEventListener("mouseleave", () => {
+    infoBtn.style.color = "#666"
+  })
+
+  infoBtn.addEventListener("click", (e) => {
+    e.stopPropagation()
+    window.ThreadsModalInfo.showModal()
+  })
+
+  // 創建 tab（只顯示有內容的 tab）
+  const tabs = []
+  tabs.push({ id: "all", label: i18n("tabAll", String(totalCount)), filter: "all" })
+  if (media.videos.length > 0) {
+    tabs.push({ id: "videos", label: i18n("tabVideos", String(media.videos.length)), filter: "video" })
+  }
+  if (media.images.length > 0) {
+    tabs.push({ id: "images", label: i18n("tabImages", String(media.images.length)), filter: "image" })
+  }
 
   let activeTab = "all"
   const contentContainer = document.createElement("div")
@@ -532,53 +583,55 @@ window.ThreadsDownloaderButton.updateDownloadMenu = function (menu, media) {
 
     if (filter === "all") {
       items = [...media.videos, ...media.images]
-
-      // 在「全部」tab 頂部添加打包下載按鈕
-      if (items.length > 1) {
-        const downloadAllBtn = document.createElement("div")
-        downloadAllBtn.className = "threads-download-all-btn"
-        downloadAllBtn.style.cssText = `
-          margin: 8px;
-          padding: 12px 16px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          font-weight: 600;
-          text-align: center;
-          transition: all 0.2s;
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-        `
-        downloadAllBtn.innerHTML = `📦 ${i18n("downloadAll", String(items.length))}`
-
-        downloadAllBtn.addEventListener("mouseenter", () => {
-          downloadAllBtn.style.transform = "translateY(-1px)"
-          downloadAllBtn.style.boxShadow = "0 4px 12px rgba(102, 126, 234, 0.4)"
-        })
-
-        downloadAllBtn.addEventListener("mouseleave", () => {
-          downloadAllBtn.style.transform = "translateY(0)"
-          downloadAllBtn.style.boxShadow = "0 2px 8px rgba(102, 126, 234, 0.3)"
-        })
-
-        downloadAllBtn.addEventListener("click", async (e) => {
-          e.stopPropagation()
-          await window.ThreadsDownloaderButton.downloadAllAsZip(items, downloadAllBtn)
-        })
-
-        contentContainer.appendChild(downloadAllBtn)
-      }
     } else if (filter === "video") {
       items = media.videos
     } else if (filter === "image") {
       items = media.images
     }
 
+    // 如果有檔案，在頂部添加打包下載按鈕（所有 tab 都支持）
+    if (items.length >= 1) {
+      const downloadAllBtn = document.createElement("div")
+      downloadAllBtn.className = "threads-download-all-btn"
+      
+      // 檢查擴充功能上下文是否有效
+      let packageIconUrl = ""
+      try {
+        packageIconUrl = chrome.runtime.getURL("image/package-white.svg")
+      } catch (error) {
+        console.warn("Threads Downloader: 擴充功能上下文已失效")
+      }
+      
+      downloadAllBtn.style.cssText = `
+        margin: 8px;
+        padding: 12px 16px;
+        background: #000;
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      `
+      downloadAllBtn.innerHTML = `<img src="${packageIconUrl}" alt="package" style="width: 20px; height: 20px;"> ${i18n("downloadAll", String(items.length))}`
+
+      downloadAllBtn.addEventListener("click", async (e) => {
+        e.stopPropagation()
+        await window.ThreadsDownloaderButton.downloadAllAsZip(items, downloadAllBtn, filter)
+      })
+
+      contentContainer.appendChild(downloadAllBtn)
+    }
+
     if (items.length === 0) {
       const empty = document.createElement("div")
       empty.className = "threads-menu-empty"
-      empty.textContent = filter === "video" ? i18n("noVideos") : i18n("noImages")
+      empty.textContent = filter === "video" ? i18n("noVideos") : filter === "image" ? i18n("noImages") : i18n("noMedia")
       empty.style.cssText = `
         padding: 20px;
         text-align: center;
@@ -610,6 +663,8 @@ window.ThreadsDownloaderButton.updateDownloadMenu = function (menu, media) {
       border-bottom: 2px solid transparent;
       color: #666;
       user-select: none;
+      white-space: nowrap;
+      flex-shrink: 0;
     `
 
     if (tab.id === activeTab) {
@@ -652,7 +707,10 @@ window.ThreadsDownloaderButton.updateDownloadMenu = function (menu, media) {
     tabContainer.appendChild(tabBtn)
   })
 
-  menu.appendChild(tabContainer)
+  tabHeader.appendChild(tabContainer)
+  tabHeader.appendChild(infoBtn)
+
+  menu.appendChild(tabHeader)
   menu.appendChild(contentContainer)
 
   // 初始渲染
@@ -891,7 +949,13 @@ window.ThreadsDownloaderButton.createMediaItem = function (container, item, menu
           downloadIcon.textContent = "✅"
 
           const { showPageNotification, i18n } = window.ThreadsDownloaderUtils
-          showPageNotification(i18n("downloadStarted", filename))
+          let downloadIconUrl = ""
+          try {
+            downloadIconUrl = chrome.runtime.getURL("image/download-white.svg")
+          } catch (error) {
+            console.warn("Threads Downloader: 擴充功能上下文已失效")
+          }
+          showPageNotification(`<img src="${downloadIconUrl}" alt="download" style="width: 16px; height: 16px;"> ${i18n("downloadStarted", filename)}`)
 
           setTimeout(() => {
             itemDiv.style.background = "transparent"
@@ -920,7 +984,7 @@ window.ThreadsDownloaderButton.createMediaItem = function (container, item, menu
 }
 
 // 打包下載所有媒體為 ZIP
-window.ThreadsDownloaderButton.downloadAllAsZip = async function (items, buttonElement) {
+window.ThreadsDownloaderButton.downloadAllAsZip = async function (items, buttonElement, tabType = "all") {
   const { findPostInfoFromElement, showPageNotification, i18n } = window.ThreadsDownloaderUtils
 
   // 檢查 JSZip 是否可用
@@ -934,6 +998,14 @@ window.ThreadsDownloaderButton.downloadAllAsZip = async function (items, buttonE
   buttonElement.style.pointerEvents = "none"
   buttonElement.style.opacity = "0.7"
 
+  // 預先取得圖示 URL
+  let packageIconUrl = ""
+  try {
+    packageIconUrl = chrome.runtime.getURL("image/package-white.svg")
+  } catch (error) {
+    console.warn("Threads Downloader: 擴充功能上下文已失效")
+  }
+
   try {
     const zip = new JSZip()
     let completed = 0
@@ -942,10 +1014,11 @@ window.ThreadsDownloaderButton.downloadAllAsZip = async function (items, buttonE
     // 取得貼文資訊用於 ZIP 檔名
     const postInfo = findPostInfoFromElement(items[0].postContainer || items[0].element)
     
-    // 使用統一的 ZIP 檔名生成器（與設定同步）
+    // 使用統一的 ZIP 檔名生成器，傳入 tab 類型
     const zipFilename = window.ThreadsFilenameGenerator.generateZipFilename(
       postInfo,
-      window.ThreadsDownloaderButton._enableFilenamePrefix !== false  // 從設定讀取
+      window.ThreadsDownloaderButton._enableFilenamePrefix !== false,  // 從設定讀取
+      tabType  // 傳入 tab 類型 ('all', 'video', 'image')
     )
 
     buttonElement.innerHTML = `⏳ ${i18n("downloadProgress", ["0", String(total)])}`
@@ -1003,8 +1076,8 @@ window.ThreadsDownloaderButton.downloadAllAsZip = async function (items, buttonE
     URL.revokeObjectURL(url)
 
     // 成功提示
-    buttonElement.innerHTML = `✅ ${i18n("completed", [String(completed), String(total)])}`
-    showPageNotification("✅ " + i18n("zipDownloaded", [String(completed), zipFilename]))
+    buttonElement.innerHTML = `<img src="${packageIconUrl}" alt="package" style="width: 20px; height: 20px;"> ${i18n("completed", [String(completed), String(total)])}`
+    showPageNotification(`<img src="${packageIconUrl}" alt="package" style="width: 16px; height: 16px;"> ${i18n("zipDownloaded", [String(completed), zipFilename])}`)
 
     setTimeout(() => {
       buttonElement.innerHTML = originalText

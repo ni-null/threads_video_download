@@ -141,7 +141,7 @@ window.ThreadsDownloaderUtils.showPageNotification = function (message) {
 
   const notification = document.createElement("div")
   notification.className = "threads-download-notification"
-  notification.textContent = message
+  notification.innerHTML = message
   notification.style.cssText = `
     position: fixed;
     top: 20px;
@@ -154,6 +154,9 @@ window.ThreadsDownloaderUtils.showPageNotification = function (message) {
     font-size: 14px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   `
 
   // 添加動畫

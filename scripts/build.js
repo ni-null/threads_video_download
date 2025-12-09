@@ -9,7 +9,7 @@ const rootDir = path.join(__dirname, "..")
 const productDir = path.join(rootDir, "product")
 
 // 需要壓縮的 JS 檔案
-const jsFiles = ["background.js", "content.js", "popup.js", "modules/utils.js", "modules/filename-generator.js", "modules/media-extractor.js", "modules/download-button.js", "modules/media-position-finder.js", "modules/media-overlay-button.js"]
+const jsFiles = ["background.js", "content.js", "popup.js", "modules/utils.js", "modules/filename-generator.js", "modules/media-extractor.js", "modules/download-button.js", "modules/media-position-finder.js", "modules/media-overlay-button.js", "modules/modal-info.js"]
 
 // 需要直接複製的靜態檔案和資料夾
 const staticFiles = [
@@ -20,7 +20,7 @@ const staticFiles = [
   "lib/jszip.min.js", // 第三方庫，已經是壓縮版
 ]
 
-const staticDirs = ["icons", "image", "_locales", "lib"]
+const staticDirs = ["logo", "image", "_locales", "lib"]
 
 console.log("🚀 開始構建發布版本...\n")
 

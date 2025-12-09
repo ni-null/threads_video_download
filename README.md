@@ -1,187 +1,296 @@
-# Threads 影片下載器 - Chrome V3 外掛
+# Threads Video Downloader
 
-這是一個 Chrome V3 版本的外掛，用於自動擷取和下載 Threads.com 上的媒體檔案。
-
-## 功能特性
-
-✨ **自動媒體檢測**
-
-- 自動掃描頁面上的影片和圖片
-- 監聽所有網絡請求，捕捉媒體檔案
-- 支援 Fetch API 和 XMLHttpRequest 攔截
-
-📥 **下載功能**
-
-- 逐個下載媒體檔案
-- 批量下載所有媒體
-- 自訂下載位置到 `Threads/` 資料夾
-
-📋 **便捷操作**
-
-- 複製媒體連結到剪貼簿
-- 清除媒體列表
-- 實時顯示檢測到的媒體數量
-
-🎨 **用戶界面**
-
-- 美觀的彈出窗口設計
-- 彩色分類（圖片/影片）
-- 響應式設計
-
-## 安裝方法
-
-### 方式一：開發者模式安裝（推薦）
-
-1. 打開 Chrome 瀏覽器
-2. 進入 `chrome://extensions/`
-3. 打開右上角的「開發人員模式」開關
-4. 點擊「加載未封裝的擴充功能」
-5. 選擇本項目的資料夾 `threads_video_download`
-6. 外掛會自動安裝並出現在擴充功能列表中
-
-### 方式二：打包安裝
-
-```bash
-# 使用 Chrome 命令行工具打包
-# 需要先安裝 Node.js 和 Chrome Extension Packer
-```
-
-## 使用方法
-
-1. **訪問 Threads**
-
-   - 進入 `https://www.threads.com/?hl=zh-tw`
-
-2. **自動掃描**
-
-   - 外掛會自動開始掃描頁面上的媒體
-   - 滾動頁面加載更多內容時，外掛會持續檢測
-
-3. **打開下載器**
-
-   - 點擊 Chrome 工具欄上的外掛圖標
-   - 會彈出下載器窗口
-
-4. **下載選項**
-   - 📋 複製：複製媒體連結到剪貼簿
-   - ⬇️ 下載：下載單個媒體檔案
-   - 下載全部：一次下載所有檢測到的媒體
-   - 清除列表：清空媒體列表
-
-## 文件結構
-
-```
-threads_video_download/
-├── manifest.json          # 外掛配置文件
-├── background.js          # 背景服務工作線程
-├── content.js            # 內容腳本（注入網頁）
-├── popup.html            # 彈出窗口 HTML
-├── popup.js              # 彈出窗口邏輯
-├── popup.css             # 彈出窗口樣式
-├── icons/                # 外掛圖標
-│   ├── icon-16.png
-│   ├── icon-48.png
-│   └── icon-128.png
-└── README.md             # 說明文檔
-```
-
-## 權限說明
-
-- `activeTab`: 訪問當前活動標籤
-- `scripting`: 在頁面中注入腳本
-- `storage`: 儲存媒體資訊
-- `host_permissions`: 僅在 `https://www.threads.com/*` 上運行
-
-## 工作原理
-
-### 媒體檢測流程
-
-1. **Fetch/XHR 攔截**
-
-   - 監聽所有 `fetch()` 和 `XMLHttpRequest` 請求
-   - 檢查內容類型是否為視頻或圖片
-
-2. **DOM 掃描**
-
-   - 掃描頁面中的 `<video>` 和 `<img>` 標籤
-   - 檢查 `src` 和 `data-src` 屬性
-
-3. **動態監控**
-
-   - 使用 `MutationObserver` 監聽 DOM 變化
-   - 每 2 秒進行一次完整掃描
-   - 檢查背景圖片和 Performance API 記錄
-
-4. **數據存儲**
-   - 使用 `chrome.storage.local` 儲存媒體列表
-   - 避免重複存儲相同的 URL
-
-## 下載行為
-
-- 檔案保存到 `Downloads/Threads/` 資料夾
-- 自動添加副檔名
-- 檔名衝突時自動重命名（e.g., `file (1).mp4`）
-
-## 已知限制
-
-- ⚠️ 某些受 CORS 保護的媒體可能無法下載
-- ⚠️ 直播視頻流可能需要特殊處理
-- ⚠️ 某些 CDN 加密的內容無法直接訪問
-
-## 故障排除
-
-### 外掛未檢測到媒體
-
-1. 確保外掛已啟用（在 `chrome://extensions/` 中檢查）
-2. 刷新頁面，讓外掛重新掃描
-3. 打開控制台（F12），查看是否有錯誤信息
-4. 滾動頁面，加載更多內容
-
-### 下載失敗
-
-1. 檢查網絡連接
-2. 確保下載位置有寫入權限
-3. 某些受保護的媒體可能需要額外授權
-4. 嘗試在新標籤頁中直接打開媒體 URL
-
-## 更新日誌
-
-### v1.0 (2024)
-
-- ✅ 初始版本發佈
-- ✅ 實現基本的媒體檢測功能
-- ✅ 添加下載和複製功能
-- ✅ 美化用戶界面
-
-## 許可證
-
-MIT License
-
-## 貢獻
-
-歡迎提交 Issue 和 Pull Request！
-
-## 第三方庫授權
-
-本擴充功能使用了以下開源第三方庫：
-
-### JSZip
-
-- **版本**: 3.10.1
-- **授權**: MIT License
-- **用途**: ZIP 文件打包和下載功能
-- **來源**: https://github.com/Stuk/jszip
-- **授權全文**: https://github.com/Stuk/jszip/blob/main/LICENSE.markdown
-
-## 免責聲明
-
-此外掛僅供個人使用。使用者應遵守 Threads.com 的服務條款和當地法律。
-作者不對使用此外掛造成的任何問題負責。
-
-## 聯繫方式
-
-如有問題或建議，請提交 Issue。
+[English](#english) | [繁體中文](#繁體中文)
 
 ---
 
-**注意**: 此外掛未在 Chrome Web Store 中發佈，只能通過開發者模式安裝。
+## 繁體中文
+
+### 📱 Threads 影片下載器
+
+一個強大的 Chrome 擴展程式，讓你輕鬆下載 Threads 上的所有影片和圖片。
+
+#### ✨ 主要功能
+
+- **🎬 影片下載** - 一鍵下載 Threads 上的高品質影片
+- **🖼️ 圖片下載** - 支援下載單張或多張圖片
+- **📦 批量打包** - 將多個媒體檔案打包成 ZIP 檔案一次下載
+- **🌍 多語言支援** - 繁體中文、簡體中文、日文、韓文、英文
+- **⚙️ 靈活設定** - 自訂檔案名稱前綴、語言偏好等
+
+#### 🚀 快速開始
+
+1. **安裝擴展程式**
+   - 前往 [Chrome Web Store](https://chrome.google.com/webstore)
+   - 搜尋 "Threads Video Downloader"
+   - 點擊「新增至 Chrome」
+
+2. **使用方式**
+   - 訪問 [threads.net](https://www.threads.net)
+   - 在影片或圖片上，點擊擴展程式圖示
+   - 選擇要下載的媒體
+   - 點擊下載按鈕
+
+#### 📥 下載選項
+
+擴展程式提供三種下載方式：
+
+| 方式 | 說明 | 適用場景 |
+|------|------|---------|
+| **單個下載** | 逐個下載媒體檔案 | 下載 1-2 個檔案 |
+| **快速選擇** | 快速篩選媒體類型 | 只想要影片或圖片 |
+| **📦 打包下載** | 將多個檔案打包成 ZIP | 批量下載多個檔案 ⭐ |
+
+**批量打包下載** 是本擴展的亮點功能：
+- 支援同時下載影片和圖片
+- 自動壓縮成 ZIP 檔案
+- 一次下載即可獲得所有檔案
+- 方便備份和分享
+
+#### ⚙️ 設定說明
+
+**語言選擇**
+- 自動：根據瀏覽器語言自動選擇
+- 繁體中文、簡體中文、日文、韓文、英文
+
+**媒體下載選單**
+- 啟用/停用下載菜單按鈕
+- 預設：啟用
+
+**單一媒體下載**
+- 啟用/停用單個下載功能
+- 預設：啟用
+
+**檔案名稱前綴**
+- 自動在下載的檔案名稱前加入 "threads_"
+- 預設：啟用
+
+#### 🔒 隱私與安全
+
+- 所有處理都在本地進行，不上傳任何數據
+- 不收集使用者數據
+- 完全遵守 Chrome 擴展安全政策
+- 詳見 [隱私政策](./privacy-policy.html)
+
+#### 🛠️ 技術詳情
+
+**技術棧**
+- Manifest V3（最新 Chrome 擴展標準）
+- 原生 JavaScript（無外部依賴，除 JSZip）
+- Service Worker 後台服務
+
+**相容性**
+- Chrome 90+
+- Edge 90+
+- 其他 Chromium 核心瀏覽器
+
+#### 📝 版本歷史
+
+**v1.0.0** (2025-12-09)
+- 首次發佈
+- 支援影片和圖片下載
+- 打包下載功能
+- 多語言支援
+- 可自訂設定
+
+#### 📞 支援與反饋
+
+- 發現問題？[提交 Issue](https://github.com/ni-null/threads_video_download/issues)
+- 有功能建議？[開啟討論](https://github.com/ni-null/threads_video_download/discussions)
+
+#### 📄 許可證
+
+MIT License
+
+#### 👨‍💻 開發者
+
+**ninull** - [GitHub 個人檔案](https://github.com/ninull)
+
+---
+
+## English
+
+### 📱 Threads Video Downloader
+
+A powerful Chrome extension that makes it easy to download all videos and images from Threads.
+
+#### ✨ Features
+
+- **🎬 Video Download** - Download high-quality videos from Threads with one click
+- **🖼️ Image Download** - Support for downloading single or multiple images
+- **📦 Batch Packaging** - Package multiple media files into a ZIP archive for download
+- **🌍 Multi-Language Support** - Traditional Chinese, Simplified Chinese, Japanese, Korean, English
+- **⚙️ Flexible Settings** - Customize filename prefix, language preference, and more
+
+#### 🚀 Quick Start
+
+1. **Install the Extension**
+   - Go to [Chrome Web Store](https://chrome.google.com/webstore)
+   - Search for "Threads Video Downloader"
+   - Click "Add to Chrome"
+
+2. **How to Use**
+   - Visit [threads.net](https://www.threads.net)
+   - Click the extension icon on a video or image
+   - Select the media you want to download
+   - Click the download button
+
+#### 📥 Download Options
+
+The extension provides three download methods:
+
+| Method | Description | Best For |
+|--------|-------------|----------|
+| **Single Download** | Download media files one by one | Downloading 1-2 files |
+| **Quick Select** | Quickly filter by media type | When you only need videos or images |
+| **📦 Batch Package** | Package multiple files into ZIP | Downloading multiple files at once ⭐ |
+
+**Batch Packaging Download** is the highlight feature of this extension:
+- Support simultaneous download of videos and images
+- Automatically compress into ZIP file
+- Get all files with one download
+- Perfect for backup and sharing
+
+#### ⚙️ Settings
+
+**Language**
+- Auto: Automatically detect based on browser language
+- Traditional Chinese, Simplified Chinese, Japanese, Korean, English
+
+**Media Download Menu**
+- Enable/Disable download menu button
+- Default: Enabled
+
+**Single Media Download**
+- Enable/Disable single file download
+- Default: Enabled
+
+**Filename Prefix**
+- Automatically prepend "threads_" to downloaded filenames
+- Default: Enabled
+
+#### 🔒 Privacy & Security
+
+- All processing happens locally, no data is uploaded
+- No user data collection
+- Fully compliant with Chrome extension security policies
+- See [Privacy Policy](./privacy-policy.html)
+
+#### 🛠️ Technical Details
+
+**Technology Stack**
+- Manifest V3 (Latest Chrome extension standard)
+- Vanilla JavaScript (No external dependencies except JSZip)
+- Service Worker background service
+
+**Compatibility**
+- Chrome 90+
+- Edge 90+
+- Other Chromium-based browsers
+
+#### 📝 Version History
+
+**v1.0.0** (2025-12-09)
+- Initial release
+- Support for video and image downloads
+- Batch packaging feature
+- Multi-language support
+- Customizable settings
+
+#### 📞 Support & Feedback
+
+- Found a bug? [Report an Issue](https://github.com/ni-null/threads_video_download/issues)
+- Have a feature request? [Start a Discussion](https://github.com/ni-null/threads_video_download/discussions)
+
+#### 📄 License
+
+MIT License
+
+#### 👨‍💻 Developer
+
+**ninull** - [GitHub Profile](https://github.com/ninull)
+
+---
+
+## 📦 Installation & Development
+
+### For Users
+
+Install from Chrome Web Store (Coming Soon)
+
+### For Developers
+
+**Prerequisites**
+- Node.js 16+
+- npm
+
+**Setup**
+```bash
+# Clone the repository
+git clone https://github.com/ni-null/threads_video_download.git
+cd threads_video_download
+
+# Install dependencies
+npm install
+
+# Build the extension
+npm run build
+
+# Load unpacked extension in Chrome
+# 1. Open chrome://extensions/
+# 2. Enable "Developer mode"
+# 3. Click "Load unpacked"
+# 4. Select the 'product' folder
+```
+
+**Project Structure**
+```
+threads_video_download/
+├── background.js                 # Service Worker
+├── content.js                    # Content Script
+├── popup.html/css/js             # Extension UI
+├── modules/                      # Modular components
+│   ├── utils.js                  # Utilities
+│   ├── filename-generator.js     # Filename generation
+│   ├── media-extractor.js        # Media extraction
+│   ├── download-button.js        # Download UI
+│   ├── media-position-finder.js  # Position detection
+│   └── media-overlay-button.js   # Overlay buttons
+├── icons/                        # Extension icons
+├── image/                        # UI resources
+├── _locales/                     # Translations (5 languages)
+├── lib/                          # Third-party libraries
+│   └── jszip.min.js
+├── manifest.json                 # Extension manifest
+├── privacy-policy.html           # Privacy policy
+├── package.json                  # Dependencies
+└── scripts/                      # Build tools
+    ├── build.js
+    └── clean.js
+```
+
+**Build Commands**
+- `npm run build` - Build for production (generates `product/` folder)
+- `npm run clean` - Clean build artifacts
+
+**What's in the Product Folder**
+After running `npm run build`, the `product/` folder contains:
+- Minified JavaScript files
+- All necessary resources (icons, images, translations)
+- manifest.json
+- Ready to upload to Chrome Web Store
+
+---
+
+## 📄 Third-party Libraries
+
+### JSZip
+
+- **Version**: 3.10.1
+- **License**: MIT License
+- **Purpose**: ZIP file packaging and download functionality
+- **Source**: https://github.com/Stuk/jszip
+
+---
+
+**Made with ❤️ for Threads lovers**
